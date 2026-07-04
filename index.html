@@ -342,7 +342,6 @@
     let userGps = "";
     let photoData = "";
     let photoTimestamp = null; 
-    let streamRef = null;
     let currentDistance = null;
 
     const submitBtn = document.getElementById('submitBtn');
@@ -358,9 +357,9 @@
     const missionDetail = document.getElementById('missionDetail');
 
     window.addEventListener('DOMContentLoaded', () => {
+        bindSegmentButtons();
         checkLocation();
         startCamera();
-        bindSegmentButtons();
     });
 
     function bindSegmentButtons() {
@@ -480,18 +479,22 @@
     }
 
     function startCamera() {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-            .then(stream => { streamRef = stream; video.srcObject = stream; })
-            .catch(err => {
-                navigator.mediaDevices.getUserMedia({ video: true })
-                    .then(stream => { streamRef = stream; video.srcObject = stream; });
-            });
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+                .then(function(stream) { video.srcObject = stream; })
+                .catch(function(err) {
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(function(stream) { video.srcObject = stream; })
+                        .catch(function(e) { console.log("Camera error:", e); });
+                });
+        }
     }
 
     snapBtn.addEventListener('click', () => {
         if (video.style.display !== 'none') {
             const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth || 640; 
+            canvas.height = video.videoHeight || 480;
             canvas.getContext('2d').drawImage(video, 0, 0);
             photoData = canvas.toDataURL('image/jpeg', 0.6); 
             photoPreview.src = photoData;
@@ -568,93 +571,4 @@
         const minute = now.getMinutes();
 
         const empType = document.getElementById('empType').value;
-        const actionType = actionTypeHidden.value;
-        const workTimeScope = workTimeScopeHidden.value; 
-        const locationType = locationTypeHidden.value;
-        let workStatus = "ปกติ";
-
-        if (locationType === "นอกสถานที่") {
-            if (actionType === "เข้างาน") {
-                if (hour > 10 || (hour === 10 && minute > 0)) workStatus = "สาย";
-            } else if (actionType === "เลิกงาน") {
-                if (hour < 14) workStatus = "ขาดราชการ";
-            }
-        } else {
-            if (actionType === "เข้างาน") {
-                if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") { 
-                    if (hour > 8 || (hour === 8 && minute > 0)) workStatus = "สาย";
-                } else { 
-                    if (hour > 7 || (hour === 7 && minute > 0)) workStatus = "สาย";
-                }
-            } else if (actionType === "เลิกงาน") { 
-                if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") {
-                    if (workTimeScope === "08:00-17:00") {
-                        if (hour < 17) workStatus = "ขาดราชการ";
-                    } else {
-                        if (hour < 16) workStatus = "ขาดราชการ";
-                    }
-                } else { 
-                    if (hour < 16) workStatus = "ขาดราชการ";
-                }
-            }
-        }
-
-        const missionLog = missionDetail.value ? ` | ภารกิจ: ${missionDetail.value}` : '';
-
-        const payload = {
-            timestamp: `${currentDateStr} ${currentTimeStr}`,
-            fullname: document.getElementById('fullname').value,
-            position: document.getElementById('position').value,
-            subDepartment: document.getElementById('subDepartment').value,
-            empType: empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" ? `บุคคลภายนอกฯ (${workTimeScope})` : empType, 
-            actionType: `${actionType} (${locationType})${missionLog}`,
-            workStatus: workStatus,
-            gps: userGps,
-            photo: photoData 
-        };
-
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbxp_vFEevC9kkToh2vA5fHqjbVT_P7r39P32wH0me8G3PK7PCsBymhKcpxEE0Onm20-/exec";
-
-        fetch(webAppUrl, {
-            method: "POST",
-            mode: "cors", 
-            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-            body: JSON.stringify(payload)
-        })
-        .then(response => {
-            alertBox.style.display = "block";
-            alertBox.classList.remove('alert-success', 'alert-danger');
-            
-            if (workStatus === "สาย" || workStatus === "ขาดราชการ") {
-                alertBox.classList.add('alert-danger');
-            } else {
-                alertBox.classList.add('alert-success');
-            }
-            
-            alertBox.innerHTML = `🔔 บันทึกสำเร็จเรียบร้อย!<br>คุณได้ลงเวลา ${actionType} (${locationType})<br>เวลา: <b>${currentTimeStr} น.</b><br>สถานะระบบสรุป: <span style="text-decoration:underline; font-weight:700;">${workStatus}</span>`;
-            
-            alert(`บันทึกเวลาสำเร็จ!\nประเภท: ${actionType} (${locationType})\nเวลา: ${currentTimeStr} น.\nผลสรุป: ${workStatus}`);
-            
-            document.getElementById('fullname').value = "";
-            missionDetail.value = "";
-            photoPreview.style.display = 'none';
-            video.style.display = 'block';
-            snapBtn.innerText = "📸 กดถ่ายภาพ";
-            photoData = "";
-            photoTimestamp = null;
-            checkLocation(); 
-            toggleMissionInput();
-        })
-        .catch(err => {
-            alertBox.style.display = "block";
-            alertBox.classList.remove('alert-success', 'alert-danger');
-            alertBox.classList.add('alert-danger');
-            alertBox.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง";
-            submitBtn.disabled = false;
-            evaluateButtonStatus();
-        });
-    }
-</script>
-
-</body>
-</html>
+        const actionType = actionTypeHidden
