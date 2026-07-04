@@ -162,7 +162,6 @@
             box-shadow: 0 6px 20px rgba(27, 94, 32, 0.25);
         }
         
-        /* กล่องแจ้งเตือน/บอกระยะห่างดั้งเดิม บังคับเปิดค้างไว้เสมอ */
         .alert-box { 
             padding: 16px; 
             border-radius: 14px; 
@@ -182,7 +181,17 @@
 
 <div class="card">
     <div class="text-center">
-        <img src="15.Logoสำนักงานเลขานุการสำนักการแพทย์.jpg" alt="โลโก้สำนักงานเลขานุการสำนักการแพทย์" class="logo" onerror="this.style.display='none';">
+        <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="46" fill="#ffffff" stroke="#1b5e20" stroke-width="3"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#2e7d32" stroke-width="1" stroke-dasharray="4,2"/>
+            <path d="M50 20 C35 35, 35 55, 50 80 C65 55, 65 35, 50 20 Z" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2"/>
+            <path d="M50 25 C40 38, 40 52, 50 72 C60 52, 60 38, 50 25 Z" fill="#2e7d32" opacity="0.3"/>
+            <circle cx="50" cy="42" r="8" fill="none" stroke="#1b5e20" stroke-width="2"/>
+            <path d="M42 60 Q50 52 58 60 Q50 56 42 60" fill="none" stroke="#1b5e20" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M45 65 Q50 59 55 65" fill="none" stroke="#1b5e20" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="50" cy="42" r="3" fill="#1b5e20"/>
+            <path d="M50 45 L50 55" stroke="#1b5e20" stroke-width="2"/>
+        </svg>
         <h2>ระบบลงเวลาปฏิบัติงาน</h2>
         <p class="subtitle">สำนักงานเลขานุการ สำนักการแพทย์</p>
     </div>
@@ -260,7 +269,7 @@
 
         <div class="form-group" id="missionGroup" style="display:none;">
             <label style="color: var(--danger);">📝 ระบุภารกิจและสถานที่ปฏิบัติงานนอกสถานที่ *</label>
-            <input type="text" id="missionDetail" placeholder="ตัวอย่าง: ประชมวิชาการ ณ โรงแรมรามาการ์เเดนส์">
+            <input type="text" id="missionDetail" placeholder="ตัวอย่าง: ประชุมวิชาการ ณ โรงแรมรามาการ์เเดนส์">
         </div>
 
         <div class="form-group" id="workTimeGroup" style="display:none;">
@@ -300,7 +309,7 @@
     let photoTimestamp = null; 
     let lastLat = null;
     let lastLon = null;
-    let isSubmitting = false; // ตัวแปรล็อกไว้ไม่ให้หน้าจอดึงระยะห่างแทรกขณะส่งข้อมูล
+    let isSubmitting = false; 
 
     const submitBtn = document.getElementById('submitBtn');
     const alertBox = document.getElementById('alertBox');
@@ -374,9 +383,8 @@
         missionDetail.required = (isOutside && isCheckIn);
     }
 
-    // ฟังก์ชันคำนวณระยะห่างจริง (เมตร) อัปเดตลงกล่องแบบเรียลไทม์
     function updateGpsDisplay() {
-        if (isSubmitting) return; // ถ้ากำลังบันทึกข้อมูล ให้ข้ามการอัปเดตระยะห่างชั่วคราว
+        if (isSubmitting) return; 
         if (lastLat === null || lastLon === null) return;
 
         if (locationTypeHidden.value === "สำนักงาน") {
@@ -396,7 +404,6 @@
         }
     }
 
-    // ฟังก์ชันเฝ้าดูพิกัดดาวเทียมแบบเคลื่อนไหวตลอดเวลา (Watch Position)
     function startTrackingLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition(
@@ -465,6 +472,7 @@
         }
     });
 
+    // 🛠️ ส่วนที่ปรับปรุงแก้ไข: ระบบการส่งค่าที่ขยายเวลา Timeout และป้องกันพิกัดหลุดนอกสถานที่เรียบร้อยครับ
     document.getElementById('mainForm').addEventListener('submit', (e) => {
         e.preventDefault();
         
@@ -499,8 +507,13 @@
                     proceedToSubmit();
                 },
                 function(err) {
+                    // ถ้านอกสถานที่แล้วดึงดาวเทียมละเอียดไม่ทันใน 10 วินาที ให้หยิบพิกัดปัจจุบันหน้าจอไปส่งแทนทันที ชิ้นงานไม่เสียหายครับ
                     if (locationTypeHidden.value === "นอกสถานที่") {
-                        userGps = "ไม่พบพิกัด (นอกสถานที่)";
+                        if (lastLat !== null && lastLon !== null) {
+                            userGps = lastLat + "," + lastLon;
+                        } else {
+                            userGps = "ไม่พบพิกัด (นอกสถานที่)";
+                        }
                         proceedToSubmit();
                     } else {
                         alert("❌ ระบบบล็อกการลงเวลาเนื่องจากหาพิกัด GPS ไม่พบ โปรดเปิดสิทธิ์เข้าถึง GPS ของเบราว์เซอร์");
@@ -510,7 +523,7 @@
                         updateGpsDisplay();
                     }
                 },
-                { enableHighAccuracy: true, timeout: 5000 } 
+                { enableHighAccuracy: true, timeout: 10000 } // ขยายเวลาให้มือถือประมวลผลช้าเพิ่มเป็น 10 วินาที จับสัญญาณดาวเทียมอยู่หมัด
             );
         } else {
             proceedToSubmit();
@@ -573,7 +586,7 @@
             photo: photoData 
         };
 
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbz0yCJeG9iR-1LldyjGcuJ7mPL4JEMLnYx-PVoAPXq7dQ-eAMp8F58Wj9gn5YpMyOjt/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxsbL3jQuEapxmzPBOuSUXN4kDKyqzckAxBw-388Yk4Iz9GQDAdrsp66rJ_uVyKrbRw/exec";
 
         fetch(webAppUrl, {
             method: "POST",
@@ -600,7 +613,6 @@
             submitBtn.disabled = false;
             submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
             
-            // แสดงหน้าจอสำเร็จทิ้งไว้ 7 วินาที แล้วจึงปล่อยให้ระบบวนกลับไปตรวจระยะห่างเมตรตามเดิม
             setTimeout(() => {
                 isSubmitting = false;
                 updateGpsDisplay();
