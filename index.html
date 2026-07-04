@@ -46,14 +46,14 @@
         .text-center { text-align: center; }
         
         .logo { 
-            max-width: 100px; 
-            height: 100px; 
+            max-width: 110px; 
+            height: 110px; 
             margin-bottom: 16px; 
             background-color: #ffffff; 
             border-radius: 50%;         
-            box-shadow: 0 8px 20px rgba(27, 94, 32, 0.1);
+            box-shadow: 0 8px 20px rgba(27, 94, 32, 0.12);
             padding: 4px;
-            object-fit: cover;          
+            object-fit: contain;          
         }
         
         h2 { 
@@ -181,17 +181,7 @@
 
 <div class="card">
     <div class="text-center">
-        <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="46" fill="#ffffff" stroke="#1b5e20" stroke-width="3"/>
-            <circle cx="50" cy="50" r="40" fill="none" stroke="#2e7d32" stroke-width="1" stroke-dasharray="4,2"/>
-            <path d="M50 20 C35 35, 35 55, 50 80 C65 55, 65 35, 50 20 Z" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2"/>
-            <path d="M50 25 C40 38, 40 52, 50 72 C60 52, 60 38, 50 25 Z" fill="#2e7d32" opacity="0.3"/>
-            <circle cx="50" cy="42" r="8" fill="none" stroke="#1b5e20" stroke-width="2"/>
-            <path d="M42 60 Q50 52 58 60 Q50 56 42 60" fill="none" stroke="#1b5e20" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M45 65 Q50 59 55 65" fill="none" stroke="#1b5e20" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="50" cy="42" r="3" fill="#1b5e20"/>
-            <path d="M50 45 L50 55" stroke="#1b5e20" stroke-width="2"/>
-        </svg>
+        <img class="logo" alt="Logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABwKC9UAAAAMFBMVEVHcEwAAAAAnQAAnwAAoQAAnwAAnwAAnwAAnwAAnwAAnwAAnwAAngAAnwAAnwAAnwAAnwDxSuE3AAAADHRSTlMAESIzRFVmd4iZqrvM3v7vAP8AAAGkSURMVIzV2dtuwjAMBuDUBloGo7S3vP8bV6S0gZAg0ToS878uIn47SByAtda6fbeZ6VpM60YpMVE/YhS2pExZ66C8iI6I/80uI3pizG9yVkhEnO71wTzGshzUqQ5Kq7Z60SbyuM+H99W8/4vVfH6K1TzexWpO73vN7VWsD6pXp86z0mB69Fr0pDSuG7f6bZ2qDdWb+pZ29XNeqz5UX7qrf8bXor9wX/mO1v07pU/Z/9P6wP0n7lO7T+0+E7vPnO4zp/vM6T5zut9t3WdO95nTfeZ0nzndZ073mdN9Xus+v6X7zOk+c7rPnO4zp/vM6X63dZ853WdO95nTfeZ0nzndZ073ea37/JbuM6f7zOk+c7rPnO4zp/vd1n3mdJ853WdO95nTfeZ0nznd57Xu81u6z5zuM6f7zOk+c7rPnO53W/eZ033mdJ853WdO95nTfeZ0n9e6z2/pPnO6z5zuM6f7zOk+c7rfbd1nTveZ033mdJ853WdO95nTfV7rPr+l+8zpPnO6z5zuM6f7zOl+t3WfOd1nTveZ033mdJ853WdO93mt+/yW7nPf9f0P0uMCFis227UAAAAASUVORK5CYII=">
         <h2>ระบบลงเวลาปฏิบัติงาน</h2>
         <p class="subtitle">สำนักงานเลขานุการ สำนักการแพทย์</p>
     </div>
@@ -472,7 +462,6 @@
         }
     });
 
-    // 🛠️ ส่วนที่ปรับปรุงแก้ไข: ระบบการส่งค่าที่ขยายเวลา Timeout และป้องกันพิกัดหลุดนอกสถานที่เรียบร้อยครับ
     document.getElementById('mainForm').addEventListener('submit', (e) => {
         e.preventDefault();
         
@@ -507,7 +496,6 @@
                     proceedToSubmit();
                 },
                 function(err) {
-                    // ถ้านอกสถานที่แล้วดึงดาวเทียมละเอียดไม่ทันใน 10 วินาที ให้หยิบพิกัดปัจจุบันหน้าจอไปส่งแทนทันที ชิ้นงานไม่เสียหายครับ
                     if (locationTypeHidden.value === "นอกสถานที่") {
                         if (lastLat !== null && lastLon !== null) {
                             userGps = lastLat + "," + lastLon;
@@ -523,7 +511,7 @@
                         updateGpsDisplay();
                     }
                 },
-                { enableHighAccuracy: true, timeout: 10000 } // ขยายเวลาให้มือถือประมวลผลช้าเพิ่มเป็น 10 วินาที จับสัญญาณดาวเทียมอยู่หมัด
+                { enableHighAccuracy: true, timeout: 10000 } 
             );
         } else {
             proceedToSubmit();
@@ -586,6 +574,7 @@
             photo: photoData 
         };
 
+        // ⚠️ พี่อย่าลืมนำ URL เว็บแอป (Web App URL) ล่าสุดจากฝั่งสีม่วงมาวางแทนที่ลิงก์ด้านล่างนี้ในเครื่องหมายคำพูดนะครับพี่
         const webAppUrl = "https://script.google.com/macros/s/AKfycbzCwI2HPatsTNZ92Jkso9bZ0Pzlnj523yzCWW7_5Ms8W2jGqzIUIkJwNvGwYZyc1qfT/exec";
 
         fetch(webAppUrl, {
