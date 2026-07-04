@@ -1,3 +1,339 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบลงเวลาปฏิบัติงาน สำนักงานเลขานุการ สำนักการแพทย์</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #1b5e20;
+            --primary-light: #e8f5e9;
+            --primary-border: #a5d6a7;
+            --accent: #2e7d32;
+            --accent-hover: #4caf50;
+            --danger: #d32f2f;
+            --danger-light: #ffebee;
+            --danger-border: #ffcdd2;
+            --gray-bg: #f1f3f5;
+            --text-main: #212529;
+        }
+
+        body { 
+            font-family: 'Sarabun', Arial, sans-serif; 
+            background: linear-gradient(135deg, #f4faf6 0%, #e8f5e9 100%); 
+            margin: 0; 
+            padding: 15px; 
+            color: var(--text-main); 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card { 
+            max-width: 480px; 
+            width: 100%;
+            margin: 20px auto; 
+            background: #ffffff; 
+            padding: 30px 24px; 
+            border-radius: 24px; 
+            box-shadow: 0 15px 35px rgba(27, 94, 32, 0.06); 
+            border: 1px solid rgba(165, 214, 167, 0.4);
+            box-sizing: border-box;
+        }
+        
+        .text-center { text-align: center; }
+        
+        .logo { 
+            max-width: 100px; 
+            height: 100px; 
+            margin-bottom: 16px; 
+            background-color: #ffffff; 
+            border-radius: 50%;         
+            box-shadow: 0 8px 20px rgba(27, 94, 32, 0.1);
+            padding: 4px;
+            object-fit: cover;          
+        }
+        
+        h2 { 
+            font-size: 22px; 
+            color: var(--primary); 
+            margin: 5px 0; 
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        
+        p.subtitle { 
+            font-size: 13.5px; 
+            color: var(--accent); 
+            margin: 0 0 30px 0; 
+            font-weight: 500;
+        }
+        
+        .form-group { margin-bottom: 22px; text-align: left; }
+        
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            font-size: 14px; 
+            color: var(--primary); 
+        }
+        
+        input, select { 
+            width: 100%; 
+            padding: 13px 16px; 
+            border: 1.5px solid var(--primary-border); 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            font-size: 14.5px; 
+            background-color: #fafdfa;
+            color: var(--primary);
+            transition: all 0.25s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.15);
+            background-color: #ffffff;
+        }
+
+        .segmented-control {
+            display: flex;
+            gap: 8px;
+            background: var(--gray-bg);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .btn-segment {
+            flex: 1;
+            padding: 12px 10px;
+            border: none;
+            background: transparent;
+            color: #6c757d;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-segment.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.12);
+            font-weight: 700;
+        }
+
+        .camera-section { 
+            background: #f4faf6; 
+            padding: 20px; 
+            border: 2px dashed var(--primary-border); 
+            border-radius: 16px; 
+            margin-bottom: 24px; 
+            text-align: center; 
+        }
+        
+        video, canvas, img { 
+            width: 100%; 
+            max-height: 260px; 
+            border-radius: 12px; 
+            background: #1a1a1a; 
+            display: block; 
+            margin: 0 auto; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .btn-snap { 
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%); 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            margin-top: 14px; 
+            font-size: 13.5px; 
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+            transition: all 0.2s;
+        }
+        .btn-snap:active { transform: scale(0.96); }
+        
+        .btn-submit { 
+            width: 100%; 
+            padding: 16px; 
+            background-color: #e0e0e0; 
+            color: #757575; 
+            border: none; 
+            border-radius: 14px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: not-allowed; 
+            transition: all 0.3s ease; 
+        }
+        
+        .active-btn { 
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%) !important; 
+            color: white !important; 
+            cursor: pointer !important; 
+            box-shadow: 0 6px 20px rgba(27, 94, 32, 0.25) !important;
+        }
+        .active-btn:active { transform: scale(0.98); }
+        
+        .danger-btn { 
+            background: linear-gradient(135deg, var(--danger) 0%, #b71c1c 100%) !important; 
+            color: white !important; 
+            cursor: not-allowed !important; 
+            box-shadow: 0 6px 20px rgba(198, 40, 40, 0.25) !important;
+        }
+        
+        .alert-box { 
+            padding: 16px; 
+            border-radius: 14px; 
+            margin-top: 24px; 
+            font-size: 14.5px; 
+            text-align: center; 
+            display: none; 
+            font-weight: 600; 
+            line-height: 1.6;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .alert-success { 
+            background: var(--primary-light) !important; 
+            color: var(--primary) !important; 
+            border: 1px solid var(--primary-border) !important; 
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.08);
+        }
+        
+        .alert-danger { 
+            background: var(--danger-light) !important; 
+            color: var(--danger) !important; 
+            border: 1px solid var(--danger-border) !important; 
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.08);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="text-center">
+        <img src="15.Logoสำนักงานเลขานุการสำนักการแพทย์.jpg" alt="โลโก้สำนักงานเลขานุการสำนักการแพทย์" class="logo">
+        <h2>ระบบลงเวลาปฏิบัติงาน</h2>
+        <p class="subtitle">สำนักงานเลขานุการ สำนักการแพทย์</p>
+    </div>
+
+    <form id="mainForm">
+        <div class="form-group">
+            <label>ชื่อ-นามสกุล</label>
+            <input type="text" id="fullname" required placeholder="ระบุชื่อและนามสกุล">
+        </div>
+        
+        <div class="form-group">
+            <label>ตำแหน่ง</label>
+            <select id="position" required>
+                <option value="" disabled selected>--- กรุณาเลือกตำแหน่ง ---</option>
+                <option value="นักจัดการงานทั่วไป">นักจัดการงานทั่วไป</option>
+                <option value="นักทรัพยากรบุคคล">นักทรัพยากรบุคคล</option>
+                <option value="นักวิชาการเงินและบัญชี">นักวิชาการเงินและบัญชี</option>
+                <option value="นักวิชาการพัสดุ">นักวิชาการพัสดุ</option>
+                <option value="นิติกร">นิติกร</option>
+                <option value="ผู้ชำนาญการด้านทรัพยากรบุคคล">ผู้ชำนาญการด้านทรัพยากรบุคคล</option>
+                <option value="ผู้เชี่ยวชาญด้านการคลังและกฎหมาย">ผู้เชี่ยวชาญด้านการคลังและกฎหมาย</option>
+                <option value="ผู้เชี่ยวชาญด้านการเงินและงบประมาณ">ผู้เชี่ยวชาญด้านการเงินและงบประมาณ</option>
+                <option value="ผู้เชี่ยวชาญด้านการบัญชีและพัสดุ">ผู้เชี่ยวชาญด้านการบัญชีและพัสดุ</option>
+                <option value="ผู้เชี่ยวชาญด้านวิเคราะห์นโยบายและแผน">ผู้เชี่ยวชาญด้านวิเคราะห์นโยบายและแผน</option>
+                <option value="เจ้าพนักงานธุรการ">เจ้าพนักงานธุรการ</option>
+                <option value="เจ้าพนักงานโสตทัศนศึกษา">เจ้าพนักงานโสตทัศนศึกษา</option>
+                <option value="นายช่างเทคนิค">นายช่างเทคนิค</option>
+                <option value="ผู้ช่วยช่าง (ช่างเทคนิค)">ผู้ช่วยช่าง (ช่างเทคนิค)</option>
+                <option value="พนักงานทั่วไป">พนักงานทั่วไป</option>
+                <option value="พนักงานสถานที่">พนักงานสถานที่</option>
+                <option value="พนักงานขับรถยนต์">พนักงานขับรถยนต์</option>
+                <option value="อื่น ๆ">อื่น ๆ</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>สังกัดกลุ่มงาน</label>
+            <select id="subDepartment" required>
+                <option value="" disabled selected>--- กรุณาเลือกกลุ่มงาน ---</option>
+                <option value="กลุ่มงานช่วยนักบริหาร">กลุ่มงานช่วยนักบริหาร</option>
+                <option value="กลุ่มงานบริหารงานทั่วไป">กลุ่มงานบริหารงานทั่วไป</option>
+                <option value="กลุ่มงานการเจ้าหน้าที่">กลุ่มงานการเจ้าหน้าที่</option>
+                <option value="กลุ่มงานการคลัง">กลุ่มงานการคลัง</option>
+                <option value="กลุ่มงานนิติการ">กลุ่มงานนิติการ</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>ประเภทของพนักงาน</label>
+            <select id="empType" required>
+                <option value="ลูกจ้างประจำ">ลูกจ้างประจำ</option>
+                <option value="ลูกจ้างชั่วคราว">ลูกจ้างชั่วคราว</option>
+                <option value="พนักงานประกันสังคม">พนักงานประกันสังคม</option>
+                <option value="บุคคลภายนอกที่ช่วยปฏิบัติราชการ">บุคคลภายนอกที่ช่วยปฏิบัติราชการ</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>สถานที่ปฏิบัติงาน</label>
+            <div class="segmented-control">
+                <button type="button" class="btn-segment active" data-target="locationType" data-value="สำนักงาน">🏢 ในสำนักงาน</button>
+                <button type="button" class="btn-segment" data-target="locationType" data-value="นอกสถานที่">🚗 นอกสถานที่</button>
+            </div>
+            <input type="hidden" id="locationType" value="สำนักงาน">
+        </div>
+
+        <div class="form-group">
+            <label>ประเภทการลงเวลา</label>
+            <div class="segmented-control">
+                <button type="button" class="btn-segment active" data-target="actionType" data-value="เข้างาน">☀️ เข้างาน</button>
+                <button type="button" class="btn-segment" data-target="actionType" data-value="เลิกงาน">🌙 เลิกงาน</button>
+            </div>
+            <input type="hidden" id="actionType" value="เข้างาน">
+        </div>
+
+        <div class="form-group" id="missionGroup" style="display:none;">
+            <label style="color: var(--danger);">📝 ระบุภารกิจและสถานที่ปฏิบัติงานนอกสถานที่ *</label>
+            <input type="text" id="missionDetail" placeholder="ตัวอย่าง: ประชุมวิชาการ ณ โรงแรมรามาการ์เเดนส์">
+        </div>
+
+        <div class="form-group" id="workTimeGroup" style="display:none;">
+            <label>ช่วงเวลาปฏิบัติงาน (เฉพาะบุคคลภายนอกฯ)</label>
+            <div class="segmented-control">
+                <button type="button" class="btn-segment active" data-target="workTimeScope" data-value="08:00-16:00">⏱️ 08:00 - 16:00 น.</button>
+                <button type="button" class="btn-segment" data-target="workTimeScope" data-value="08:00-17:00">⏱️ 08:00 - 17:00 น.</button>
+            </div>
+            <input type="hidden" id="workTimeScope" value="08:00-16:00">
+        </div>
+
+        <div class="camera-section">
+            <label>📸 ถ่ายภาพเซลฟี่กับสถานที่ทำงาน</label>
+            <video id="video" autoplay playsinline></video>
+            <img id="photoPreview" style="display:none;">
+            <button type="button" class="btn-snap" id="snapBtn">📸 กดถ่ายภาพ</button>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-submit" disabled>กำลังรอตรวจสอบพิกัด GPS...</button>
+    </form>
+
+    <div id="alertBox" class="alert-box"></div>
+</div>
+
 <script>
     const TARGET_LAT = 13.766324; 
     const TARGET_LON = 100.470656;
@@ -123,7 +459,6 @@
         }
     }
 
-    // 🟢 แก้ไขสูตรคำนวณที่ถูกต้องเรียบร้อยครับ
     function haversineDistance(lat1, lon1, lat2, lon2) {
         const R = 6371000; 
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -320,3 +655,6 @@
         });
     }
 </script>
+
+</body>
+</html>
