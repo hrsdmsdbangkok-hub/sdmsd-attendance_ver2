@@ -45,19 +45,15 @@
         
         .text-center { text-align: center; }
         
-        .logo-box { 
-            width: 80px; 
-            height: 80px; 
-            margin: 0 auto 16px auto; 
-            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%); 
+        .logo { 
+            max-width: 100px; 
+            height: 100px; 
+            margin-bottom: 16px; 
+            background-color: #ffffff; 
             border-radius: 50%;         
-            box-shadow: 0 8px 20px rgba(27, 94, 32, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 32px;
-            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(27, 94, 32, 0.1);
+            padding: 4px;
+            object-fit: cover;          
         }
         
         h2 { 
@@ -174,6 +170,7 @@
             text-align: center; 
             display: none; 
             font-weight: 600; 
+            line-height: 1.6;
         }
         
         .alert-success { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); }
@@ -184,7 +181,7 @@
 
 <div class="card">
     <div class="text-center">
-        <div class="logo-box">สพ</div>
+        <img src="15.Logoสำนักงานเลขานุการสำนักการแพทย์.jpg" alt="โลโก้สำนักงานเลขานุการสำนักการแพทย์" class="logo" onerror="this.style.display='none';">
         <h2>ระบบลงเวลาปฏิบัติงาน</h2>
         <p class="subtitle">สำนักงานเลขานุการ สำนักการแพทย์</p>
     </div>
@@ -297,7 +294,7 @@
     const TARGET_LON = 100.470656;
     const RADIUS_LIMIT = 500;      
 
-    let userGps = "รอการตรวจสอบ";
+    let userGps = "ไม่พบพิกัด";
     let photoData = "";
     let photoTimestamp = null; 
 
@@ -316,11 +313,10 @@
     const missionDetail = document.getElementById('missionDetail');
 
     window.addEventListener('load', () => {
-        checkLocation();
+        checkLocationQuick(); // ปรับให้เช็คพิกัดแบบเร็ว ไม่หน่วงตอนโหลดหน้าเว็บ
         startCamera();
     });
 
-    // ปุ่มกดต่างๆ ปลดล็อกอิสระ ไม่ผูกติดกับ GPS สำเร็จหรือไม่
     document.getElementById('locOfficeBtn').addEventListener('click', function() {
         this.classList.add('active');
         document.getElementById('locOutsideBtn').classList.remove('active');
@@ -372,12 +368,13 @@
         missionDetail.required = (isOutside && isCheckIn);
     }
 
-    function checkLocation() {
+    // ปรับการดึงค่าพิกัดให้ทำงานเร็วขึ้น ไม่หน่วงดาวเทียมเกินไป
+    function checkLocationQuick() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(pos) { userGps = pos.coords.latitude + "," + pos.coords.longitude; },
-                function(err) { console.log("GPS Error ignored to avoid UI block"); },
-                { enableHighAccuracy: true, timeout: 5000 }
+                function(err) { console.log("Quick GPS skip"); },
+                { enableHighAccuracy: false, timeout: 3000, maximumAge: 30000 }
             );
         }
     }
@@ -387,7 +384,6 @@
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
                 .then(function(stream) { video.srcObject = stream; })
                 .catch(function(err) {
-                    // หากกล้องเปิดไม่ได้ ให้เปิดโซนเลือกไฟล์ทดแทน
                     video.style.display = 'none';
                     fallbackUpload.style.display = 'block';
                 });
@@ -414,7 +410,6 @@
         }
     });
 
-    // ตรวจจับกรณีเลือกไฟล์ภาพแทนถ่ายสด
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -438,7 +433,7 @@
         }
 
         submitBtn.disabled = true;
-        submitBtn.innerText = "กำลังดึงพิกัดล่าสุด...";
+        submitBtn.innerText = "กำลังตรวจสอบพิกัดล่าสุด...";
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -464,7 +459,7 @@
                         submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
                     }
                 },
-                { enableHighAccuracy: true, timeout: 6000 }
+                { enableHighAccuracy: true, timeout: 5000 } // ลดเวลาการดึงพิกัดเพื่อลดความหน่วง
             );
         } else {
             proceedToSubmit();
@@ -536,10 +531,17 @@
             body: JSON.stringify(payload)
         })
         .then(response => {
+            // คืนค่ารูปแบบกล่องข้อความแจ้งเตือนความสำเร็จเวอร์ชันแรกสุด
             alertBox.style.display = "block";
-            alertBox.className = "alert-box " + ((workStatus === "สาย" || workStatus === "ขาดราชการ") ? "alert-danger" : "alert-success");
-            alertBox.innerHTML = `🔔 บันทึกสำเร็จ!<br>เวลา: <b>${currentTimeStr} น.</b><br>สถานะ: <b>${workStatus}</b>`;
-            alert(`บันทึกเวลาสำเร็จ!\nผลสรุป: ${workStatus}`);
+            alertBox.classList.remove('alert-success', 'alert-danger');
+            if (workStatus === "สาย" || workStatus === "ขาดราชการ") {
+                alertBox.classList.add('alert-danger');
+            } else {
+                alertBox.classList.add('alert-success');
+            }
+            alertBox.innerHTML = `🔔 บันทึกสำเร็จเรียบร้อย!<br>คุณได้ลงเวลา ${actionType} (${locationType})<br>เวลา: <b>${currentTimeStr} น.</b><br>สถานะระบบสรุป: <span style="text-decoration:underline; font-weight:700;">${workStatus}</span>`;
+            
+            alert(`บันทึกเวลาสำเร็จ!\nประเภท: ${actionType} (${locationType})\nเวลา: ${currentTimeStr} น.\nผลสรุป: ${workStatus}`);
             
             document.getElementById('fullname').value = "";
             missionDetail.value = "";
@@ -547,11 +549,12 @@
             if(video.style.display === 'none' && !fallbackUpload.style.display) video.style.display = 'block';
             submitBtn.disabled = false;
             submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
+            checkLocationQuick();
         })
         .catch(err => {
             alertBox.style.display = "block";
             alertBox.className = "alert-box alert-danger";
-            alertBox.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่";
+            alertBox.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง";
             submitBtn.disabled = false;
             submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
         });
