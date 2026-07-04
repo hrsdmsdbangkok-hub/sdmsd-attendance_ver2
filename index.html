@@ -5,7 +5,7 @@
 
     let userGps = "";
     let photoData = "";
-    let photoTimestamp = null; // 🔑 เพิ่มตัวแปรเก็บเวลาที่กดถ่ายรูป
+    let photoTimestamp = null; 
     let streamRef = null;
     let currentDistance = null;
 
@@ -123,14 +123,15 @@
         }
     }
 
+    // 🟢 แก้ไขสูตรคำนวณที่ถูกต้องเรียบร้อยครับ
     function haversineDistance(lat1, lon1, lat2, lon2) {
         const R = 6371000; 
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  const b = Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
                   Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-b));
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         return R * c;
     }
 
@@ -147,7 +148,7 @@
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
             .then(stream => { streamRef = stream; video.srcObject = stream; })
             .catch(err => {
-                navigator.mediaDevices.mediaDevices.getUserMedia({ video: true })
+                navigator.mediaDevices.getUserMedia({ video: true })
                     .then(stream => { streamRef = stream; video.srcObject = stream; });
             });
     }
@@ -159,7 +160,7 @@
             canvas.getContext('2d').drawImage(video, 0, 0);
             photoData = canvas.toDataURL('image/jpeg', 0.6); 
             photoPreview.src = photoData;
-            photoTimestamp = new Date(); // 🔑 บันทึกเวลาที่กดถ่ายรูปภาพนี้ไว้
+            photoTimestamp = new Date(); 
             video.style.display = 'none'; photoPreview.style.display = 'block';
             snapBtn.innerText = "🔄 ถ่ายใหม่อีกครั้ง";
         } else {
@@ -176,12 +177,10 @@
             return;
         }
 
-        // 🛡️ ป้องกันชั้นที่ 1: ตรวจสอบอายุของภาพถ่าย (ถ้าถ่ายทิ้งไว้นานเกิน 5 นาที จะบังคับให้ถ่ายใหม่)
         const nowCheck = new Date();
         const timeDiffMinutes = (nowCheck - photoTimestamp) / 1000 / 60;
         if (timeDiffMinutes > 5) {
-            alert("❌ ภาพถ่ายนี้ถ่ายไว้นานเกิน 5 นาทีแล้วเพื่อความปลอดภัยกรุณากดถ่ายภาพใหม่อีกครั้ง ณ ตำแหน่งปัจจุบันของคุณครับ");
-            // รีเซ็ตกล้องให้ถ่ายใหม่
+            alert("❌ ภาพถ่ายนี้ถ่ายไว้นานเกิน 5 นาทีแล้ว เพื่อความปลอดภัยกรุณากดถ่ายภาพใหม่อีกครั้ง ณ ตำแหน่งปัจจุบันของคุณครับ");
             video.style.display = 'block'; photoPreview.style.display = 'none';
             snapBtn.innerText = "📸 กดถ่ายภาพ"; photoData = ""; photoTimestamp = null;
             return;
@@ -190,7 +189,6 @@
         submitBtn.disabled = true;
         submitBtn.innerText = "กำลังตรวจสอบพิกัดล่าสุดแบบเรียลไทม์...";
 
-        // 🛡️ ป้องกันชั้นที่ 2: บังคับดึงพิกัดใหม่สดๆ ณ วินาทีที่กดปุ่มบันทึก (ตัดปัญหาพิกัดเก่าค้าง)
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(pos) {
@@ -201,14 +199,12 @@
                     const freshDistance = haversineDistance(freshLat, freshLon, TARGET_LAT, TARGET_LON);
                     const locationType = locationTypeHidden.value;
 
-                    // ถ้าเลือกโหมดสำนักงาน แต่พิกัดล่าสุดที่เช็คสดๆ ดันอยู่ห่างเกินลิมิต
                     if (locationType === "สำนักงาน" && freshDistance > RADIUS_LIMIT) {
                         alert("❌ ตรวจพบพิกัดล่าสุดของคุณอยู่นอกพื้นที่สำนักงาน (ห่าง " + Math.round(freshDistance) + " ม.) ไม่สามารถแอบกดบันทึกย้อนหลังได้ครับ");
-                        checkLocation(); // รีเซ็ตสถานะปุ่ม
+                        checkLocation(); 
                         return;
                     }
 
-                    // ผ่านการเช็คความปลอดภัยทั้งหมด -> ดำเนินการส่งข้อมูลเข้าSheetsตามปกติ
                     proceedToSubmit();
                 },
                 function(err) {
@@ -220,14 +216,13 @@
                         checkLocation();
                     }
                 },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } // บังคับดึงค่าใหม่สดๆ ไม่เอาค่าแคช
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
             );
         } else {
             proceedToSubmit();
         }
     });
 
-    // แยกส่วนการส่งข้อมูลออกมาเป็นฟังก์ชัน
     function proceedToSubmit() {
         submitBtn.innerText = "กำลังบันทึกข้อมูลเข้าระบบ...";
         
