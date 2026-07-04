@@ -162,7 +162,7 @@
             box-shadow: 0 6px 20px rgba(27, 94, 32, 0.25);
         }
         
-        /* 🚨 กล่องสเตตัสแจ้งเตือนดั้งเดิมที่เปิดแสดงพิกัดทันทีตั้งแต่แรก */
+        /* กล่องแจ้งเตือน/บอกพิกัด และระยะห่างเป็นเมตรดั้งเดิม */
         .alert-box { 
             padding: 16px; 
             border-radius: 14px; 
@@ -171,7 +171,7 @@
             text-align: center; 
             font-weight: 600; 
             line-height: 1.6;
-            display: block; /* เปิดแสดงผลค้างไว้แบบเวอร์ชันแรก */
+            display: block; 
         }
         
         .alert-success { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); }
@@ -298,6 +298,8 @@
     let userGps = "ไม่พบพิกัด";
     let photoData = "";
     let photoTimestamp = null; 
+    let lastLat = null;
+    let lastLon = null;
 
     const submitBtn = document.getElementById('submitBtn');
     const alertBox = document.getElementById('alertBox');
@@ -323,6 +325,7 @@
         document.getElementById('locOutsideBtn').classList.remove('active');
         locationTypeHidden.value = "สำนักงาน";
         toggleMissionInput();
+        updateGpsDisplay(); // อัปเดตการแสดงผลทันทีเมื่อเปลี่ยนโหมด
     });
 
     document.getElementById('locOutsideBtn').addEventListener('click', function() {
@@ -330,6 +333,7 @@
         document.getElementById('locOfficeBtn').classList.remove('active');
         locationTypeHidden.value = "นอกสถานที่";
         toggleMissionInput();
+        updateGpsDisplay(); // อัปเดตการแสดงผลทันทีเมื่อเปลี่ยนโหมด
     });
 
     document.getElementById('actInBtn').addEventListener('click', function() {
@@ -369,14 +373,36 @@
         missionDetail.required = (isOutside && isCheckIn);
     }
 
-    // ฟังก์ชันบอกพิกัดลงกล่อง Alert Box แบบเวอร์ชันแรก
+    // ฟังก์ชันคำนวณและแสดงผลระยะห่างลงกล่อง Alert Box สไตล์ดั้งเดิม
+    function updateGpsDisplay() {
+        if (lastLat === null || lastLon === null) return;
+
+        if (locationTypeHidden.value === "สำนักงาน") {
+            const dist = haversineDistance(lastLat, lastLon, TARGET_LAT, TARGET_LON);
+            const roundedDist = Math.round(dist);
+
+            if (dist <= RADIUS_LIMIT) {
+                alertBox.className = "alert-box alert-success";
+                alertBox.innerHTML = `📍 พิกัดของคุณห่างจากสำนักงาน: <b>${roundedDist} เมตร</b><br><span style="color:#1b5e20; font-size:13px;">(อยู่ในรัศมีล็อกพิกัด 500 ม. ลงเวลาได้ปกติ)</span>`;
+            } else {
+                alertBox.className = "alert-box alert-danger";
+                alertBox.innerHTML = `⚠️ คุณอยู่ห่างจากสำนักงานเกินไป: <b style="text-decoration:underline;">${roundedDist} เมตร</b><br><span style="font-size:13px;">(จำกัดรัศมี 500 ม. โปรดขยับเข้าใกล้บริเวณสำนักงาน)</span>`;
+            }
+        } else {
+            // ถ้านอกสถานที่ แสดงเป็นค่าพิกัดปกติ
+            alertBox.className = "alert-box alert-success";
+            alertBox.innerHTML = `📍 พิกัดปัจจุบันของคุณ: <b>${lastLat.toFixed(5)}, ${lastLon.toFixed(5)}</b> (โหมดนอกสถานที่)`;
+        }
+    }
+
     function checkLocationQuick() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(pos) { 
-                    userGps = pos.coords.latitude + "," + pos.coords.longitude;
-                    alertBox.className = "alert-box alert-success";
-                    alertBox.innerHTML = `📍 พิกัดปัจจุบันของคุณ: <b>${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}</b>`;
+                    lastLat = pos.coords.latitude;
+                    lastLon = pos.coords.longitude;
+                    userGps = lastLat + "," + lastLon;
+                    updateGpsDisplay();
                 },
                 function(err) { 
                     alertBox.className = "alert-box alert-danger";
@@ -451,15 +477,17 @@
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(pos) {
-                    userGps = pos.coords.latitude + "," + pos.coords.longitude;
+                    lastLat = pos.coords.latitude;
+                    lastLon = pos.coords.longitude;
+                    userGps = lastLat + "," + lastLon;
                     
-                    const dist = haversineDistance(pos.coords.latitude, pos.coords.longitude, TARGET_LAT, TARGET_LON);
+                    const dist = haversineDistance(lastLat, lastLon, TARGET_LAT, TARGET_LON);
                     
                     if (locationTypeHidden.value === "สำนักงาน" && dist > RADIUS_LIMIT) {
                         alert("❌ คุณอยู่นอกพื้นที่สำนักงาน (ห่าง " + Math.round(dist) + " ม.) ไม่สามารถลงเวลาในสำนักงานได้ครับ");
                         submitBtn.disabled = false;
                         submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
-                        checkLocationQuick();
+                        updateGpsDisplay();
                         return;
                     }
                     proceedToSubmit();
@@ -564,8 +592,8 @@
             submitBtn.disabled = false;
             submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
             
-            // ตั้งเวลาหน่วง 5 วินาที ก่อนดึงพิกัดกลับมาโชว์ใหม่ เพื่อให้ผู้ใช้ได้อ่านสเตตัสบันทึกสำเร็จก่อน
-            setTimeout(checkLocationQuick, 5000);
+            // แสดงสถานะบันทึกสำเร็จทิ้งไว้ 6 วินาที ก่อนดึงระบบคำนวณระยะห่างเป็นเมตรกลับมาโชว์ใหม่ตามปกติ
+            setTimeout(checkLocationQuick, 6000);
         })
         .catch(err => {
             alertBox.className = "alert-box alert-danger";
