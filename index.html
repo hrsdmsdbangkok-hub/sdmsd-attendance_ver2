@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบลงเวลาปฏิบัติงาน สำนักงานเลขานุการ สำนักการแพทย์</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap');
+
+        body { 
+            font-family: 'Sarabun', Arial, sans-serif; 
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
+            margin: 0; 
+            padding: 15px; 
+            color: #2e7d32; 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        .card { 
+            max-width: 480px; 
+            width: 100%;
+            margin: 20px auto; 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 25px 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(46, 125, 50, 0.15); 
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-sizing: border-box;
+        }
+        .text-center { text-align: center; }
+        .logo { 
+            max-width: 110px; 
+            height: 110px; 
+            margin-bottom: 12px; 
+            background-color: #ffffff; 
+            border-radius: 50%;         
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            padding: 2px;
+            object-fit: cover;          
+            transform: scale(1.15);    
+            overflow: hidden;           
+        }
+        h2 { 
+            font-size: 20px; 
+            color: #1b5e20; 
+            margin: 5px 0; 
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        p.subtitle { 
+            font-size: 13px; 
+            color: #4caf50; 
+            margin: 0 0 25px 0; 
+            font-weight: 500;
+        }
+        .form-group { margin-bottom: 18px; text-align: left; }
+        label { 
+            display: block; 
+            margin-bottom: 6px; 
+            font-weight: bold; 
+            font-size: 13.5px; 
+            color: #2e7d32; 
+        }
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1.5px solid #a5d6a7; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            font-size: 14px; 
+            background-color: #fbfdfb;
+            color: #1b5e20;
+            transition: all 0.3s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4caf50;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+            background-color: #ffffff;
+        }
+        .camera-section { 
+            background: #f1f8f3; 
+            padding: 15px; 
+            border: 2px dashed #81c784; 
+            border-radius: 12px; 
+            margin-bottom: 20px; 
+            text-align: center; 
+        }
+        video, canvas, img { 
+            width: 100%; 
+            max-height: 240px; 
+            border-radius: 10px; 
+            background: #252525; 
+            display: block; 
+            margin: 0 auto; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+        .btn-snap { 
+            background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%); 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            margin-top: 10px; 
+            font-size: 13px; 
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.2);
+            transition: transform 0.2s;
+        }
+        .btn-snap:active { transform: scale(0.95); }
+        
+        .btn-submit { 
+            width: 100%; 
+            padding: 14px; 
+            background-color: #cccccc; 
+            color: #666666; 
+            border: none; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: not-allowed; 
+            transition: all 0.3s ease; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .active-btn { 
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%) !important; 
+            color: white !important; 
+            cursor: pointer !important; 
+            box-shadow: 0 5px 15px rgba(27, 94, 32, 0.3) !important;
+        }
+        .active-btn:active { transform: scale(0.98); }
+        .danger-btn { 
+            background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%) !important; 
+            color: white !important; 
+            cursor: not-allowed !important; 
+            box-shadow: 0 5px 15px rgba(198, 40, 40, 0.3) !important;
+        }
+        .alert-box { 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-top: 20px; 
+            font-size: 14px; 
+            text-align: center; 
+            display: none; 
+            font-weight: bold; 
+            line-height: 1.6;
+        }
+        .alert-success { 
+            background: #e8f5e9; 
+            color: #1b5e20; 
+            border: 1px solid #c8e6c9; 
+            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.1);
+        }
+        .alert-error { 
+            background: #ffebee; 
+            color: #c62828; 
+            border: 1px solid #ffcdd2; 
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="text-center">
+        <img src="15.Logoสำนักงานเลขานุการสำนักการแพทย์.jpg" alt="โลโก้สำนักงานเลขานุการสำนักการแพทย์" class="logo">
+        <h2>ระบบลงเวลาปฏิบัติงาน</h2>
+        <p class="subtitle">สำนักงานเลขานุการ สำนักการแพทย์</p>
+    </div>
+
+    <form id="mainForm">
+        <div class="form-group">
+            <label>ชื่อ-นามสกุล</label>
+            <input type="text" id="fullname" required placeholder="ระบุชื่อและนามสกุล">
+        </div>
+        <div class="form-group">
+            <label>ตำแหน่ง</label>
+            <select id="position" required>
+                <option value="" disabled selected>--- กรุณาเลือกตำแหน่ง ---</option>
+                <option value="นักจัดการงานทั่วไป">นักจัดการงานทั่วไป</option>
+                <option value="นักทรัพยากรบุคคล">นักทรัพยากรบุคคล</option>
+                <option value="นักวิชาการเงินและบัญชี">นักวิชาการเงินและบัญชี</option>
+                <option value="นักวิชาการพัสดุ">นักวิชาการพัสดุ</option>
+                <option value="นิติกร">นิติกร</option>
+                <option value="ผู้ชำนาญการด้านทรัพยากรบุคคล">ผู้ชำนาญการด้านทรัพยากรบุคคล</option>
+                <option value="ผู้เชี่ยวชาญด้านการคลังและกฎหมาย">ผู้เชี่ยวชาญด้านการคลังและกฎหมาย</option>
+                <option value="ผู้เชี่ยวชาญด้านการเงินและงบประมาณ">ผู้เชี่ยวชาญด้านการเงินและงบประมาณ</option>
+                <option value="ผู้เชี่ยวชาญด้านการบัญชีและพัสดุ">ผู้เชี่ยวชาญด้านการบัญชีและพัสดุ</option>
+                <option value="ผู้เชี่ยวชาญด้านวิเคราะห์นโยบายและแผน">ผู้เชี่ยวชาญด้านวิเคราะห์นโยบายและแผน</option>
+                <option value="เจ้าพนักงานธุรการ">เจ้าพนักงานธุรการ</option>
+                <option value="เจ้าพนักงานโสตทัศนศึกษา">เจ้าพนักงานโสตทัศนศึกษา</option>
+                <option value="นายช่างเทคนิค">นายช่างเทคนิค</option>
+                <option value="ผู้ช่วยช่าง (ช่างเทคนิค)">ผู้ช่วยช่าง (ช่างเทคนิค)</option>
+                <option value="พนักงานทั่วไป">พนักงานทั่วไป</option>
+                <option value="พนักงานสถานที่">พนักงานสถานที่</option>
+                <option value="พนักงานขับรถยนต์">พนักงานขับรถยนต์</option>
+                <option value="อื่น ๆ">อื่น ๆ</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>สังกัดกลุ่มงาน</label>
+            <select id="subDepartment" required>
+                <option value="" disabled selected>--- กรุณาเลือกกลุ่มงาน ---</option>
+                <option value="กลุ่มงานช่วยนักบริหาร">กลุ่มงานช่วยนักบริหาร</option>
+                <option value="กลุ่มงานบริหารงานทั่วไป">กลุ่มงานบริหารงานทั่วไป</option>
+                <option value="กลุ่มงานการเจ้าหน้าที่">กลุ่มงานการเจ้าหน้าที่</option>
+                <option value="กลุ่มงานการคลัง">กลุ่มงานการคลัง</option>
+                <option value="กลุ่มงานนิติการ">กลุ่มงานนิติการ</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>ประเภทของพนักงาน</label>
+            <select id="empType" required>
+                <option value="ลูกจ้างประจำ">ลูกจ้างประจำ</option>
+                <option value="ลูกจ้างชั่วคราว">ลูกจ้างชั่วคราว</option>
+                <option value="พนักงานประกันสังคม">พนักงานประกันสังคม</option>
+                <option value="บุคคลภายนอกที่ช่วยปฏิบัติราชการ">บุคคลภายนอกที่ช่วยปฏิบัติราชการ</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>สถานที่ปฏิบัติงาน</label>
+            <select id="locationType" required>
+                <option value="สำนักงาน">สำนักงานประจำ (วัดศรีสุดารามฯ)</option>
+                <option value="นอกสถานที่">นอกสถานที่ (ไปประชุม / อบรม / สัมมนา)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>ประเภทการลงเวลา</label>
+            <select id="actionType" required>
+                <option value="เข้างาน">เข้างาน</option>
+                <option value="เลิกงาน">เลิกงาน</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="missionGroup" style="display:none;">
+            <label style="color: #d32f2f;">📝 ระบุภารกิจและสถานที่ปฏิบัติงานนอกสถานที่ *</label>
+            <input type="text" id="missionDetail" placeholder="ตัวอย่าง: ประชุมวิชาการ ณ โรงแรมรามาการ์เเดนส์">
+        </div>
+
+        <div class="form-group" id="workTimeGroup" style="display:none;">
+            <label>ช่วงเวลาปฏิบัติงาน (เฉพาะบุคคลภายนอกฯ)</label>
+            <select id="workTimeScope">
+                <option value="08:00-16:00">08:00 น. - 16:00 น.</option>
+                <option value="08:00-17:00">08:00 น. - 17:00 น.</option>
+            </select>
+        </div>
+
+        <div class="camera-section">
+            <label>📸 ถ่ายภาพเซลฟี่กับสถานที่ทำงาน</label>
+            <video id="video" autoplay playsinline></video>
+            <img id="photoPreview" style="display:none;">
+            <button type="button" class="btn-snap" id="snapBtn">📸 กดถ่ายภาพ</button>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-submit" disabled>กำลังรอตรวจสอบพิกัด GPS...</button>
+    </form>
+
+    <div id="alertBox" class="alert-box"></div>
+</div>
+
+<script>
+    const TARGET_LAT = 13.766324; 
+    const TARGET_LON = 100.470656;
+    const RADIUS_LIMIT = 500;      
+
+    let userGps = "";
+    let photoData = "";
+    let streamRef = null;
+    let currentDistance = null;
+
+    const submitBtn = document.getElementById('submitBtn');
+    const alertBox = document.getElementById('alertBox');
+    const video = document.getElementById('video');
+    const photoPreview = document.getElementById('photoPreview');
+    const snapBtn = document.getElementById('snapBtn');
+    const locationTypeSelect = document.getElementById('locationType');
+    const actionTypeSelect = document.getElementById('actionType');
+    const missionGroup = document.getElementById('missionGroup');
+    const missionDetail = document.getElementById('missionDetail');
+
+    window.addEventListener('DOMContentLoaded', () => {
+        checkLocation();
+        startCamera();
+    });
+
+    document.getElementById('empType').addEventListener('change', function() {
+        const workTimeGroup = document.getElementById('workTimeGroup');
+        if (this.value === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") {
+            workTimeGroup.style.display = 'block';
+        } else {
+            workTimeGroup.style.display = 'none';
+        }
+    });
+
+    function toggleMissionInput() {
+        const isOutside = locationTypeSelect.value === "นอกสถานที่";
+        const isCheckIn = actionTypeSelect.value === "เข้างาน";
+
+        if (isOutside && isCheckIn) {
+            missionGroup.style.display = 'block';
+            missionDetail.required = true;
+        } else {
+            missionGroup.style.display = 'none';
+            missionDetail.required = false;
+            missionDetail.value = ""; 
+        }
+    }
+
+    locationTypeSelect.addEventListener('change', function() {
+        evaluateButtonStatus();
+        toggleMissionInput();
+    });
+    actionTypeSelect.addEventListener('change', function() {
+        toggleMissionInput();
+    });
+
+    function checkLocation() {
+        if (!navigator.geolocation) {
+            updateSubmitStatus("Browser ไม่รองรับ GPS", "danger");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                userGps = lat + "," + lon;
+                
+                currentDistance = haversineDistance(lat, lon, TARGET_LAT, TARGET_LON);
+                evaluateButtonStatus(); 
+            },
+            function(err) {
+                if (locationTypeSelect.value === "นอกสถานที่") {
+                    userGps = "ไม่พบพิกัด (นอกสถานที่)";
+                    submitBtn.disabled = false;
+                    submitBtn.className = "btn-submit active-btn";
+                    submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน (นอกสถานที่)";
+                } else {
+                    updateSubmitStatus("❌ โปรดเปิดสิทธิ์เข้าถึง GPS บนมือถือ", "danger");
+                    alert("กรุณาเปิดการระบุตำแหน่ง (GPS) บนโทรศัพท์ และกดยอมรับสิทธิ์แชร์พิกัดในบราวเซอร์ด้วยครับ\n(รหัสข้อผิดพลาด: " + err.message + ")");
+                }
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        );
+    }
+
+    function evaluateButtonStatus() {
+        const isOnSite = locationTypeSelect.value === "นอกสถานที่";
+        if (isOnSite) {
+            submitBtn.disabled = false;
+            submitBtn.className = "btn-submit active-btn";
+            submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน (นอกสถานที่)";
+        } else {
+            if (currentDistance !== null) {
+                if (currentDistance <= RADIUS_LIMIT) {
+                    submitBtn.disabled = false;
+                    submitBtn.className = "btn-submit active-btn";
+                    submitBtn.innerText = "📌 บันทึกเวลา (ในพิกัดงาน " + Math.round(currentDistance) + " ม.)";
+                } else {
+                    updateSubmitStatus("❌ อยู่นอกพื้นที่ทำงาน (ห่าง " + Math.round(currentDistance) + " ม.)", "danger");
+                }
+            } else {
+                updateSubmitStatus("กำลังรอตรวจสอบพิกัด GPS...", "default");
+                submitBtn.disabled = true;
+            }
+        }
+    }
+
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371000; 
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    function updateSubmitStatus(text, type) {
+        submitBtn.innerText = text;
+        if(type === "danger") {
+            submitBtn.className = "btn-submit danger-btn";
+        } else {
+            submitBtn.className = "btn-submit";
+        }
+    }
+
+    function startCamera() {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+            .then(stream => { streamRef = stream; video.srcObject = stream; })
+            .catch(err => {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => { streamRef = stream; video.srcObject = stream; });
+            });
+    }
+
+    snapBtn.addEventListener('click', () => {
+        if (video.style.display !== 'none') {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            photoData = canvas.toDataURL('image/jpeg', 0.6); 
+            photoPreview.src = photoData;
+            video.style.display = 'none'; photoPreview.style.display = 'block';
+            snapBtn.innerText = "🔄 ถ่ายใหม่อีกครั้ง";
+        } else {
+            video.style.display = 'block'; photoPreview.style.display = 'none';
+            snapBtn.innerText = "📸 กดถ่ายภาพ"; photoData = "";
+        }
+    });
+
+    document.getElementById('mainForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        if (!photoData) {
+            alert("กรุณากดถ่ายภาพเซลฟี่ยืนยันตัวตนก่อนบันทึกเวลาครับ");
+            return;
+        }
+
+        if (locationTypeSelect.value === "สำนักงาน" && currentDistance > RADIUS_LIMIT) {
+            alert("คุณอยู่นอกพื้นที่สำนักงาน ไม่สามารถลงเวลาในโหมดปกติได้");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = "กำลังบันทึกข้อมูลเข้าระบบ...";
+
+        const now = new Date();
+        const currentTimeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const currentDateStr = now.toLocaleDateString('th-TH');
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+
+        const empType = document.getElementById('empType').value;
+        const actionType = actionTypeSelect.value;
+        const workTimeScope = document.getElementById('workTimeScope').value; 
+        const locationType = locationTypeSelect.value;
+        let workStatus = "ปกติ";
+
+        if (locationType === "นอกสถานที่") {
+            if (actionType === "เข้างาน") {
+                if (hour > 10 || (hour === 10 && minute > 0)) workStatus = "สาย";
+            } else if (actionType === "เลิกงาน") {
+                if (hour < 14) workStatus = "ขาดราชการ";
+            }
+        } else {
+            if (actionType === "เข้างาน") {
+                if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") { 
+                    if (hour > 8 || (hour === 8 && minute > 0)) workStatus = "สาย";
+                } else { 
+                    if (hour > 7 || (hour === 7 && minute > 0)) workStatus = "สาย";
+                }
+            } else if (actionType === "เลิกงาน") { 
+                if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") {
+                    if (workTimeScope === "08:00-17:00") {
+                        if (hour < 17) workStatus = "ขาดราชการ";
+                    } else {
+                        if (hour < 16) workStatus = "ขาดราชการ";
+                    }
+                } else { 
+                    if (hour < 16) workStatus = "ขาดราชการ";
+                }
+            }
+        }
+
+        const missionLog = missionDetail.value ? ` | ภารกิจ: ${missionDetail.value}` : '';
+
+        const payload = {
+            timestamp: `${currentDateStr} ${currentTimeStr}`,
+            fullname: document.getElementById('fullname').value,
+            position: document.getElementById('position').value,
+            subDepartment: document.getElementById('subDepartment').value,
+            empType: empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" ? `บุคคลภายนอกฯ (${workTimeScope})` : empType, 
+            actionType: `${actionType} (${locationType})${missionLog}`,
+            workStatus: workStatus,
+            gps: userGps,
+            photo: photoData
+        };
+
+        // 🟢 อัปเดตเป็น URL เว็บแอปใบใหม่ของคุณเรียบร้อยแล้วครับ 🟢
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbyCp0k6G7g6gI26W4vcxtbbako__0TTOyzaEHu8No7Q4zZB5_tAkpnFAxTA39AUPr7S/exec";
+
+        fetch(webAppUrl, {
+            method: "POST",
+            mode: "cors", 
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            alertBox.style.display = "block";
+            alertBox.className = `alert-box alert-success`;
+            alertBox.innerHTML = `🔔 บันทึกสำเร็จเรียบร้อย!<br>คุณได้ลงเวลา ${actionType} (${locationType})<br>เวลา: <b>${currentTimeStr} น.</b><br>สถานะระบบสรุป: <span style="text-decoration:underline;">${workStatus}</span>`;
+            
+            alert(`บันทึกเวลาสำเร็จ!\nประเภท: ${actionType} (${locationType})\nเวลา: ${currentTimeStr} น.\nผลสรุป: ${workStatus}`);
+            
+            document.getElementById('fullname').value = "";
+            missionDetail.value = "";
+            photoPreview.style.display = 'none';
+            video.style.display = 'block';
+            snapBtn.innerText = "📸 กดถ่ายภาพ";
+            photoData = "";
+            checkLocation(); 
+            toggleMissionInput();
+        })
+        .catch(err => {
+            alertBox.style.display = "block";
+            alertBox.className = `alert-box alert-error`;
+            alertBox.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง";
+            submitBtn.disabled = false;
+            evaluateButtonStatus();
+        });
+    });
+</script>
+
+</body>
+</html>
