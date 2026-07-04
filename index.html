@@ -161,31 +161,17 @@
             cursor: pointer; 
             box-shadow: 0 6px 20px rgba(27, 94, 32, 0.25);
         }
-
-        /* ดีไซน์แถบแสดงพิกัดดั้งเดิม */
-        .gps-status {
-            margin-top: 14px;
-            font-size: 13px;
-            color: #555555;
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #e9ecef;
-            display: inline-block;
-            width: 100%;
-            box-sizing: border-box;
-            font-weight: 500;
-        }
         
+        /* 🚨 กล่องสเตตัสแจ้งเตือนดั้งเดิมที่เปิดแสดงพิกัดทันทีตั้งแต่แรก */
         .alert-box { 
             padding: 16px; 
             border-radius: 14px; 
             margin-top: 24px; 
             font-size: 14.5px; 
             text-align: center; 
-            display: none; 
             font-weight: 600; 
             line-height: 1.6;
+            display: block; /* เปิดแสดงผลค้างไว้แบบเวอร์ชันแรก */
         }
         
         .alert-success { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); }
@@ -299,11 +285,9 @@
         </div>
 
         <button type="submit" id="submitBtn" class="btn-submit">📌 บันทึกเวลาปฏิบัติงาน</button>
-        
-        <div id="gpsStatusBlock" class="gps-status text-center">📡 พิกัดปัจจุบันของคุณ: <b>กำลังดึงข้อมูล GPS...</b></div>
     </form>
 
-    <div id="alertBox" class="alert-box"></div>
+    <div id="alertBox" class="alert-box alert-success">📡 กำลังตรวจสอบพิกัดพิกัดของคุณ...</div>
 </div>
 
 <script>
@@ -317,7 +301,6 @@
 
     const submitBtn = document.getElementById('submitBtn');
     const alertBox = document.getElementById('alertBox');
-    const gpsStatusBlock = document.getElementById('gpsStatusBlock');
     const video = document.getElementById('video');
     const photoPreview = document.getElementById('photoPreview');
     const snapBtn = document.getElementById('snapBtn');
@@ -386,21 +369,24 @@
         missionDetail.required = (isOutside && isCheckIn);
     }
 
-    // ฟังก์ชันเช็กพิกัดอย่างรวดเร็วเพื่อแสดงใต้ปุ่มกด
+    // ฟังก์ชันบอกพิกัดลงกล่อง Alert Box แบบเวอร์ชันแรก
     function checkLocationQuick() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(pos) { 
                     userGps = pos.coords.latitude + "," + pos.coords.longitude;
-                    gpsStatusBlock.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b style="color:green;">${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}</b>`;
+                    alertBox.className = "alert-box alert-success";
+                    alertBox.innerHTML = `📍 พิกัดปัจจุบันของคุณ: <b>${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}</b>`;
                 },
                 function(err) { 
-                    gpsStatusBlock.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b style="color:red;">ไม่พบพิกัด (โปรดอนุญาตสิทธิ์สิทธิ์ GPS)</b>`;
+                    alertBox.className = "alert-box alert-danger";
+                    alertBox.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b>ไม่พบพิกัด (โปรดเปิดสิทธิ์ GPS ของเบราว์เซอร์)</b>`;
                 },
-                { enableHighAccuracy: false, timeout: 3000, maximumAge: 30000 }
+                { enableHighAccuracy: false, timeout: 4000, maximumAge: 30000 }
             );
         } else {
-            gpsStatusBlock.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b style="color:red;">เบราว์เซอร์ไม่รองรับ GPS</b>`;
+            alertBox.className = "alert-box alert-danger";
+            alertBox.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b>เบราว์เซอร์ไม่รองรับระบบ GPS</b>`;
         }
     }
 
@@ -459,13 +445,13 @@
 
         submitBtn.disabled = true;
         submitBtn.innerText = "กำลังตรวจสอบพิกัดล่าสุด...";
-        gpsStatusBlock.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b>กำลังดึงพิกัดความละเอียดสูง...</b>`;
+        alertBox.className = "alert-box alert-success";
+        alertBox.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b>กำลังดึงพิกัดความละเอียดสูงเพื่อล็อกรัศมี...</b>`;
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(pos) {
                     userGps = pos.coords.latitude + "," + pos.coords.longitude;
-                    gpsStatusBlock.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b style="color:green;">${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}</b>`;
                     
                     const dist = haversineDistance(pos.coords.latitude, pos.coords.longitude, TARGET_LAT, TARGET_LON);
                     
@@ -529,4 +515,66 @@
                 if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" && (hour > 8 || (hour === 8 && minute > 0))) workStatus = "สาย";
                 else if (empType !== "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" && (hour > 7 || (hour === 7 && minute > 0))) workStatus = "สาย";
             } else if (actionType === "เลิกงาน") {
-                if (empType === "บุคคลภายนอกที่ช่วย
+                if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") {
+                    if (workTimeScope === "08:00-17:00" && hour < 17) workStatus = "ขาดราชการ";
+                    else if (workTimeScope !== "08:00-17:00" && hour < 16) workStatus = "ขาดราชการ";
+                } else if (hour < 16) {
+                    workStatus = "ขาดราชการ";
+                }
+            }
+        }
+
+        const missionLog = missionDetail.value ? ` | ภารกิจ: ${missionDetail.value}` : '';
+
+        const payload = {
+            timestamp: `${currentDateStr} ${currentTimeStr}`,
+            fullname: document.getElementById('fullname').value,
+            position: document.getElementById('position').value,
+            subDepartment: document.getElementById('subDepartment').value,
+            empType: empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" ? `บุคคลภายนอกฯ (${workTimeScope})` : empType, 
+            actionType: `${actionType} (${locationType})${missionLog}`,
+            workStatus: workStatus,
+            gps: userGps,
+            photo: photoData 
+        };
+
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxp_vFEevC9kkToh2vA5fHqjbVT_P7r39P32wH0me8G3PK7PCsBymhKcpxEE0Onm20-/exec";
+
+        fetch(webAppUrl, {
+            method: "POST",
+            mode: "cors", 
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            alertBox.classList.remove('alert-success', 'alert-danger');
+            if (workStatus === "สาย" || workStatus === "ขาดราชการ") {
+                alertBox.classList.add('alert-danger');
+            } else {
+                alertBox.classList.add('alert-success');
+            }
+            alertBox.innerHTML = `🔔 บันทึกสำเร็จเรียบร้อย!<br>คุณได้ลงเวลา ${actionType} (${locationType})<br>เวลา: <b>${currentTimeStr} น.</b><br>สถานะระบบสรุป: <span style="text-decoration:underline; font-weight:700;">${workStatus}</span>`;
+            
+            alert(`บันทึกเวลาสำเร็จ!\nประเภท: ${actionType} (${locationType})\nเวลา: ${currentTimeStr} น.\nผลสรุป: ${workStatus}`);
+            
+            document.getElementById('fullname').value = "";
+            missionDetail.value = "";
+            photoPreview.style.display = 'none';
+            if(video.style.display === 'none' && !fallbackUpload.style.display) video.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
+            
+            // ตั้งเวลาหน่วง 5 วินาที ก่อนดึงพิกัดกลับมาโชว์ใหม่ เพื่อให้ผู้ใช้ได้อ่านสเตตัสบันทึกสำเร็จก่อน
+            setTimeout(checkLocationQuick, 5000);
+        })
+        .catch(err => {
+            alertBox.className = "alert-box alert-danger";
+            alertBox.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง";
+            submitBtn.disabled = false;
+            submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
+            setTimeout(checkLocationQuick, 3000);
+        });
+    }
+</script>
+</body>
+</html>
