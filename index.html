@@ -5,158 +5,230 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบลงเวลาปฏิบัติงาน สำนักงานเลขานุการ สำนักการแพทย์</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #1b5e20;
+            --primary-light: #e8f5e9;
+            --primary-border: #a5d6a7;
+            --accent: #2e7d32;
+            --accent-hover: #4caf50;
+            --danger: #d32f2f;
+            --danger-light: #ffebee;
+            --danger-border: #ffcdd2;
+            --gray-bg: #f1f3f5;
+            --text-main: #212529;
+        }
 
         body { 
             font-family: 'Sarabun', Arial, sans-serif; 
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
+            background: linear-gradient(135deg, #f4faf6 0%, #e8f5e9 100%); 
             margin: 0; 
             padding: 15px; 
-            color: #2e7d32; 
+            color: var(--text-main); 
             min-height: 100vh;
             display: flex;
             align-items: center;
         }
+        
         .card { 
             max-width: 480px; 
             width: 100%;
             margin: 20px auto; 
-            background: rgba(255, 255, 255, 0.95); 
-            padding: 25px 20px; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(46, 125, 50, 0.15); 
-            border: 1px solid rgba(255, 255, 255, 0.8);
+            background: #ffffff; 
+            padding: 30px 24px; 
+            border-radius: 24px; 
+            box-shadow: 0 15px 35px rgba(27, 94, 32, 0.06); 
+            border: 1px solid rgba(165, 214, 167, 0.4);
             box-sizing: border-box;
         }
+        
         .text-center { text-align: center; }
+        
         .logo { 
-            max-width: 110px; 
-            height: 110px; 
-            margin-bottom: 12px; 
+            max-width: 100px; 
+            height: 100px; 
+            margin-bottom: 16px; 
             background-color: #ffffff; 
             border-radius: 50%;         
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            padding: 2px;
+            box-shadow: 0 8px 20px rgba(27, 94, 32, 0.1);
+            padding: 4px;
             object-fit: cover;          
-            transform: scale(1.15);    
-            overflow: hidden;           
         }
+        
         h2 { 
-            font-size: 20px; 
-            color: #1b5e20; 
+            font-size: 22px; 
+            color: var(--primary); 
             margin: 5px 0; 
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
+        
         p.subtitle { 
-            font-size: 13px; 
-            color: #4caf50; 
-            margin: 0 0 25px 0; 
+            font-size: 13.5px; 
+            color: var(--accent); 
+            margin: 0 0 30px 0; 
             font-weight: 500;
         }
-        .form-group { margin-bottom: 18px; text-align: left; }
+        
+        .form-group { margin-bottom: 22px; text-align: left; }
+        
         label { 
             display: block; 
-            margin-bottom: 6px; 
-            font-weight: bold; 
-            font-size: 13.5px; 
-            color: #2e7d32; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            font-size: 14px; 
+            color: var(--primary); 
         }
+        
         input, select { 
             width: 100%; 
-            padding: 12px; 
-            border: 1.5px solid #a5d6a7; 
-            border-radius: 10px; 
+            padding: 13px 16px; 
+            border: 1.5px solid var(--primary-border); 
+            border-radius: 12px; 
             box-sizing: border-box; 
-            font-size: 14px; 
-            background-color: #fbfdfb;
-            color: #1b5e20;
-            transition: all 0.3s ease;
+            font-size: 14.5px; 
+            background-color: #fafdfa;
+            color: var(--primary);
+            transition: all 0.25s ease;
         }
+        
         input:focus, select:focus {
             outline: none;
-            border-color: #4caf50;
-            box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.15);
             background-color: #ffffff;
         }
+
+        /* 🕹️ ปุ่มกดสลับสถานะแบบโมเดิร์น (Segmented Control) แทนนช่อง Dropdown เดิม */
+        .segmented-control {
+            display: flex;
+            gap: 8px;
+            background: var(--gray-bg);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .btn-segment {
+            flex: 1;
+            padding: 12px 10px;
+            border: none;
+            background: transparent;
+            color: #6c757d;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* เมื่อปุ่มถูกเลือก */
+        .btn-segment.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.12);
+            font-weight: 700;
+        }
+
         .camera-section { 
-            background: #f1f8f3; 
-            padding: 15px; 
-            border: 2px dashed #81c784; 
-            border-radius: 12px; 
-            margin-bottom: 20px; 
+            background: #f4faf6; 
+            padding: 20px; 
+            border: 2px dashed var(--primary-border); 
+            border-radius: 16px; 
+            margin-bottom: 24px; 
             text-align: center; 
         }
+        
         video, canvas, img { 
             width: 100%; 
-            max-height: 240px; 
-            border-radius: 10px; 
-            background: #252525; 
+            max-height: 260px; 
+            border-radius: 12px; 
+            background: #1a1a1a; 
             display: block; 
             margin: 0 auto; 
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
+        
         .btn-snap { 
-            background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%); 
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%); 
             color: white; 
             border: none; 
-            padding: 10px 20px; 
+            padding: 12px 24px; 
             border-radius: 25px; 
             cursor: pointer; 
-            margin-top: 10px; 
-            font-size: 13px; 
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.2);
-            transition: transform 0.2s;
+            margin-top: 14px; 
+            font-size: 13.5px; 
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+            transition: all 0.2s;
         }
-        .btn-snap:active { transform: scale(0.95); }
+        .btn-snap:active { transform: scale(0.96); }
         
         .btn-submit { 
             width: 100%; 
-            padding: 14px; 
-            background-color: #cccccc; 
-            color: #666666; 
+            padding: 16px; 
+            background-color: #e0e0e0; 
+            color: #757575; 
             border: none; 
-            border-radius: 10px; 
+            border-radius: 14px; 
             font-size: 16px; 
-            font-weight: bold; 
+            font-weight: 700; 
             cursor: not-allowed; 
             transition: all 0.3s ease; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
+        
         .active-btn { 
-            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%) !important; 
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%) !important; 
             color: white !important; 
             cursor: pointer !important; 
-            box-shadow: 0 5px 15px rgba(27, 94, 32, 0.3) !important;
+            box-shadow: 0 6px 20px rgba(27, 94, 32, 0.25) !important;
         }
         .active-btn:active { transform: scale(0.98); }
+        
         .danger-btn { 
-            background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%) !important; 
+            background: linear-gradient(135deg, var(--danger) 0%, #b71c1c 100%) !important; 
             color: white !important; 
             cursor: not-allowed !important; 
-            box-shadow: 0 5px 15px rgba(198, 40, 40, 0.3) !important;
+            box-shadow: 0 6px 20px rgba(198, 40, 40, 0.25) !important;
         }
+        
+        /* 🚨 สไตล์กล่องแจ้งเตือนผลลัพธ์ */
         .alert-box { 
-            padding: 15px; 
-            border-radius: 10px; 
-            margin-top: 20px; 
-            font-size: 14px; 
+            padding: 16px; 
+            border-radius: 14px; 
+            margin-top: 24px; 
+            font-size: 14.5px; 
             text-align: center; 
             display: none; 
-            font-weight: bold; 
+            font-weight: 600; 
             line-height: 1.6;
+            animation: slideDown 0.3s ease;
         }
+        
+        /* ผลลัพธ์ปกติ -> สีเขียว */
         .alert-success { 
-            background: #e8f5e9; 
-            color: #1b5e20; 
-            border: 1px solid #c8e6c9; 
-            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.1);
+            background: var(--primary-light) !important; 
+            color: var(--primary) !important; 
+            border: 1px solid var(--primary-border) !important; 
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.08);
         }
-        .alert-error { 
-            background: #ffebee; 
-            color: #c62828; 
-            border: 1px solid #ffcdd2; 
+        
+        /* ผลลัพธ์สายหรือขาดราชการ -> เปลี่ยนเป็นสีแดง */
+        .alert-danger { 
+            background: var(--danger-light) !important; 
+            color: var(--danger) !important; 
+            border: 1px solid var(--danger-border) !important; 
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.08);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -174,6 +246,7 @@
             <label>ชื่อ-นามสกุล</label>
             <input type="text" id="fullname" required placeholder="ระบุชื่อและนามสกุล">
         </div>
+        
         <div class="form-group">
             <label>ตำแหน่ง</label>
             <select id="position" required>
@@ -220,23 +293,27 @@
                 <option value="บุคคลภายนอกที่ช่วยปฏิบัติราชการ">บุคคลภายนอกที่ช่วยปฏิบัติราชการ</option>
             </select>
         </div>
+
         <div class="form-group">
             <label>สถานที่ปฏิบัติงาน</label>
-            <select id="locationType" required>
-                <option value="สำนักงาน">สำนักงานประจำ (วัดศรีสุดารามฯ)</option>
-                <option value="นอกสถานที่">นอกสถานที่ (ไปประชุม / อบรม / สัมมนา)</option>
-            </select>
+            <div class="segmented-control">
+                <button type="button" class="btn-segment active" data-target="locationType" data-value="สำนักงาน">🏢 ในสำนักงาน</button>
+                <button type="button" class="btn-segment" data-target="locationType" data-value="นอกสถานที่">🚗 นอกสถานที่</button>
+            </div>
+            <input type="hidden" id="locationType" value="สำนักงาน">
         </div>
+
         <div class="form-group">
             <label>ประเภทการลงเวลา</label>
-            <select id="actionType" required>
-                <option value="เข้างาน">เข้างาน</option>
-                <option value="เลิกงาน">เลิกงาน</option>
-            </select>
+            <div class="segmented-control">
+                <button type="button" class="btn-segment active" data-target="actionType" data-value="เข้างาน">☀️ เข้างาน</button>
+                <button type="button" class="btn-segment" data-target="actionType" data-value="เลิกงาน">🌙 เลิกงาน</button>
+            </div>
+            <input type="hidden" id="actionType" value="เข้างาน">
         </div>
 
         <div class="form-group" id="missionGroup" style="display:none;">
-            <label style="color: #d32f2f;">📝 ระบุภารกิจและสถานที่ปฏิบัติงานนอกสถานที่ *</label>
+            <label style="color: var(--danger);">📝 ระบุภารกิจและสถานที่ปฏิบัติงานนอกสถานที่ *</label>
             <input type="text" id="missionDetail" placeholder="ตัวอย่าง: ประชุมวิชาการ ณ โรงแรมรามาการ์เเดนส์">
         </div>
 
@@ -276,15 +353,45 @@
     const video = document.getElementById('video');
     const photoPreview = document.getElementById('photoPreview');
     const snapBtn = document.getElementById('snapBtn');
-    const locationTypeSelect = document.getElementById('locationType');
-    const actionTypeSelect = document.getElementById('actionType');
+    
+    const locationTypeHidden = document.getElementById('locationType');
+    const actionTypeHidden = document.getElementById('actionType');
     const missionGroup = document.getElementById('missionGroup');
     const missionDetail = document.getElementById('missionDetail');
 
     window.addEventListener('DOMContentLoaded', () => {
         checkLocation();
         startCamera();
+        bindSegmentButtons();
     });
+
+    // 🕹️ ฟังก์ชันเปลี่ยนแท็บปุ่มกดและผูกค่าลง Hidden Input อัตโนมัติ
+    function bindSegmentButtons() {
+        const segments = document.querySelectorAll('.btn-segment');
+        segments.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const value = this.getAttribute('data-value');
+                
+                // ค้นหากลุ่มปุ่มเดียวกันเพื่อเคลียร์คลาส active
+                const siblingButtons = document.querySelectorAll(`.btn-segment[data-target="${targetId}"]`);
+                siblingButtons.forEach(b => b.classList.remove('active'));
+                
+                // ไฮไลต์ปุ่มที่คลิก
+                this.classList.add('active');
+                
+                // บันทึกค่าลง Input ลับ
+                document.getElementById(targetId).value = value;
+                
+                // เรียกทำงานลอจิกการเช็คเงื่อนไขฟอร์ม
+                if (targetId === 'locationType') {
+                    evaluateButtonStatus();
+                    checkLocation();
+                }
+                toggleMissionInput();
+            });
+        });
+    }
 
     document.getElementById('empType').addEventListener('change', function() {
         const workTimeGroup = document.getElementById('workTimeGroup');
@@ -296,8 +403,8 @@
     });
 
     function toggleMissionInput() {
-        const isOutside = locationTypeSelect.value === "นอกสถานที่";
-        const isCheckIn = actionTypeSelect.value === "เข้างาน";
+        const isOutside = locationTypeHidden.value === "นอกสถานที่";
+        const isCheckIn = actionTypeHidden.value === "เข้างาน";
 
         if (isOutside && isCheckIn) {
             missionGroup.style.display = 'block';
@@ -308,14 +415,6 @@
             missionDetail.value = ""; 
         }
     }
-
-    locationTypeSelect.addEventListener('change', function() {
-        evaluateButtonStatus();
-        toggleMissionInput();
-    });
-    actionTypeSelect.addEventListener('change', function() {
-        toggleMissionInput();
-    });
 
     function checkLocation() {
         if (!navigator.geolocation) {
@@ -333,14 +432,13 @@
                 evaluateButtonStatus(); 
             },
             function(err) {
-                if (locationTypeSelect.value === "นอกสถานที่") {
+                if (locationTypeHidden.value === "นอกสถานที่") {
                     userGps = "ไม่พบพิกัด (นอกสถานที่)";
                     submitBtn.disabled = false;
                     submitBtn.className = "btn-submit active-btn";
                     submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน (นอกสถานที่)";
                 } else {
                     updateSubmitStatus("❌ โปรดเปิดสิทธิ์เข้าถึง GPS บนมือถือ", "danger");
-                    alert("กรุณาเปิดการระบุตำแหน่ง (GPS) บนโทรศัพท์ และกดยอมรับสิทธิ์แชร์พิกัดในบราวเซอร์ด้วยครับ\n(รหัสข้อผิดพลาด: " + err.message + ")");
                 }
             },
             { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
@@ -348,7 +446,7 @@
     }
 
     function evaluateButtonStatus() {
-        const isOnSite = locationTypeSelect.value === "นอกสถานที่";
+        const isOnSite = locationTypeHidden.value === "นอกสถานที่";
         if (isOnSite) {
             submitBtn.disabled = false;
             submitBtn.className = "btn-submit active-btn";
@@ -421,7 +519,7 @@
             return;
         }
 
-        if (locationTypeSelect.value === "สำนักงาน" && currentDistance > RADIUS_LIMIT) {
+        if (locationTypeHidden.value === "สำนักงาน" && currentDistance > RADIUS_LIMIT) {
             alert("คุณอยู่นอกพื้นที่สำนักงาน ไม่สามารถลงเวลาในโหมดปกติได้");
             return;
         }
@@ -436,9 +534,9 @@
         const minute = now.getMinutes();
 
         const empType = document.getElementById('empType').value;
-        const actionType = actionTypeSelect.value;
+        const actionType = actionTypeHidden.value;
         const workTimeScope = document.getElementById('workTimeScope').value; 
-        const locationType = locationTypeSelect.value;
+        const locationType = locationTypeHidden.value;
         let workStatus = "ปกติ";
 
         if (locationType === "นอกสถานที่") {
@@ -481,8 +579,7 @@
             photo: photoData
         };
 
-        // 🟢 อัปเดตเป็น URL เว็บแอปใบใหม่ของคุณเรียบร้อยแล้วครับ 🟢
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbyCp0k6G7g6gI26W4vcxtbbako__0TTOyzaEHu8No7Q4zZB5_tAkpnFAxTA39AUPr7S/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbyyuRmtbWytQ-o_1HuF9cjYyVNHO1sfz-lvyt5cb_Hl4lNF9jHdm0zQtuXmdl0iYv5T/exec";
 
         fetch(webAppUrl, {
             method: "POST",
@@ -492,11 +589,22 @@
         })
         .then(response => {
             alertBox.style.display = "block";
-            alertBox.className = `alert-box alert-success`;
-            alertBox.innerHTML = `🔔 บันทึกสำเร็จเรียบร้อย!<br>คุณได้ลงเวลา ${actionType} (${locationType})<br>เวลา: <b>${currentTimeStr} น.</b><br>สถานะระบบสรุป: <span style="text-decoration:underline;">${workStatus}</span>`;
+            
+            // 🚨 เคลียร์คลาสเก่าออกให้หมดก่อนประเมินผลสีพื้นหลังใหม่
+            alertBox.classList.remove('alert-success', 'alert-danger');
+            
+            // ตรวจสอบเงื่อนไขการแยกสี (หาก "สาย" หรือ "ขาดราชการ" ให้สลับเป็นสีแดงเด่นชัด)
+            if (workStatus === "สาย" || workStatus === "ขาดราชการ") {
+                alertBox.classList.add('alert-danger');
+            } else {
+                alertBox.classList.add('alert-success');
+            }
+            
+            alertBox.innerHTML = `🔔 บันทึกสำเร็จเรียบร้อย!<br>คุณได้ลงเวลา ${actionType} (${locationType})<br>เวลา: <b>${currentTimeStr} น.</b><br>สถานะระบบสรุป: <span style="text-decoration:underline; font-weight:700;">${workStatus}</span>`;
             
             alert(`บันทึกเวลาสำเร็จ!\nประเภท: ${actionType} (${locationType})\nเวลา: ${currentTimeStr} น.\nผลสรุป: ${workStatus}`);
             
+            // รีเซ็ตค่าหลังบันทึก
             document.getElementById('fullname').value = "";
             missionDetail.value = "";
             photoPreview.style.display = 'none';
@@ -508,7 +616,8 @@
         })
         .catch(err => {
             alertBox.style.display = "block";
-            alertBox.className = `alert-box alert-error`;
+            alertBox.classList.remove('alert-success', 'alert-danger');
+            alertBox.classList.add('alert-danger');
             alertBox.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง";
             submitBtn.disabled = false;
             evaluateButtonStatus();
