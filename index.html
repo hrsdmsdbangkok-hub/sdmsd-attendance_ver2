@@ -45,15 +45,19 @@
         
         .text-center { text-align: center; }
         
-        .logo { 
-            max-width: 100px; 
-            height: 100px; 
-            margin-bottom: 16px; 
-            background-color: #ffffff; 
+        .logo-box { 
+            width: 80px; 
+            height: 80px; 
+            margin: 0 auto 16px auto; 
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%); 
             border-radius: 50%;         
-            box-shadow: 0 8px 20px rgba(27, 94, 32, 0.1);
-            padding: 4px;
-            object-fit: cover;          
+            box-shadow: 0 8px 20px rgba(27, 94, 32, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
         }
         
         h2 { 
@@ -90,14 +94,6 @@
             font-size: 14.5px; 
             background-color: #fafdfa;
             color: var(--primary);
-            transition: all 0.25s ease;
-        }
-        
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.15);
-            background-color: #ffffff;
         }
 
         .segmented-control {
@@ -106,7 +102,6 @@
             background: var(--gray-bg);
             padding: 6px;
             border-radius: 14px;
-            border: 1px solid rgba(0,0,0,0.02);
         }
 
         .btn-segment {
@@ -119,11 +114,6 @@
             font-weight: 600;
             border-radius: 10px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
         }
 
         .btn-segment.active {
@@ -149,7 +139,6 @@
             background: #1a1a1a; 
             display: block; 
             margin: 0 auto; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
         
         .btn-snap { 
@@ -162,35 +151,19 @@
             margin-top: 14px; 
             font-size: 13.5px; 
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
-            transition: all 0.2s;
         }
         
         .btn-submit { 
             width: 100%; 
             padding: 16px; 
-            background-color: #e0e0e0; 
-            color: #757575; 
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+            color: white; 
             border: none; 
             border-radius: 14px; 
             font-size: 16px; 
             font-weight: 700; 
-            cursor: not-allowed; 
-            transition: all 0.3s ease; 
-        }
-        
-        .active-btn { 
-            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%) !important; 
-            color: white !important; 
-            cursor: pointer !important; 
-            box-shadow: 0 6px 20px rgba(27, 94, 32, 0.25) !important;
-        }
-        
-        .danger-btn { 
-            background: linear-gradient(135deg, var(--danger) 0%, #b71c1c 100%) !important; 
-            color: white !important; 
-            cursor: not-allowed !important; 
-            box-shadow: 0 6px 20px rgba(198, 40, 40, 0.25) !important;
+            cursor: pointer; 
+            box-shadow: 0 6px 20px rgba(27, 94, 32, 0.25);
         }
         
         .alert-box { 
@@ -201,7 +174,6 @@
             text-align: center; 
             display: none; 
             font-weight: 600; 
-            line-height: 1.6;
         }
         
         .alert-success { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); }
@@ -212,7 +184,7 @@
 
 <div class="card">
     <div class="text-center">
-        <img src="15.Logoสำนักงานเลขานุการสำนักการแพทย์.jpg" alt="โลโก้สำนักงานเลขานุการสำนักการแพทย์" class="logo">
+        <div class="logo-box">สพ</div>
         <h2>ระบบลงเวลาปฏิบัติงาน</h2>
         <p class="subtitle">สำนักงานเลขานุการ สำนักการแพทย์</p>
     </div>
@@ -307,9 +279,14 @@
             <video id="video" autoplay playsinline></video>
             <img id="photoPreview" style="display:none;">
             <button type="button" class="btn-snap" id="snapBtn">📸 กดถ่ายภาพ</button>
+            
+            <div id="fallbackUpload" style="margin-top:10px; font-size:12px; display:none;">
+                <p style="color:red; margin:5px 0;">หากกล้องใช้งานไม่ได้ ให้เลือกไฟล์รูปภาพแทน:</p>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
         </div>
 
-        <button type="submit" id="submitBtn" class="btn-submit" disabled>กำลังรอตรวจสอบพิกัด GPS...</button>
+        <button type="submit" id="submitBtn" class="btn-submit">📌 บันทึกเวลาปฏิบัติงาน</button>
     </form>
 
     <div id="alertBox" class="alert-box"></div>
@@ -320,16 +297,17 @@
     const TARGET_LON = 100.470656;
     const RADIUS_LIMIT = 500;      
 
-    let userGps = "";
+    let userGps = "รอการตรวจสอบ";
     let photoData = "";
     let photoTimestamp = null; 
-    let currentDistance = null;
 
     const submitBtn = document.getElementById('submitBtn');
     const alertBox = document.getElementById('alertBox');
     const video = document.getElementById('video');
     const photoPreview = document.getElementById('photoPreview');
     const snapBtn = document.getElementById('snapBtn');
+    const fallbackUpload = document.getElementById('fallbackUpload');
+    const fileInput = document.getElementById('fileInput');
     
     const locationTypeHidden = document.getElementById('locationType');
     const actionTypeHidden = document.getElementById('actionType');
@@ -337,161 +315,90 @@
     const missionGroup = document.getElementById('missionGroup');
     const missionDetail = document.getElementById('missionDetail');
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('load', () => {
         checkLocation();
         startCamera();
     });
 
-    // --- ส่วนควบคุมปุ่มกดแบบดั้งเดิมที่เสถียรที่สุด ---
-    document.getElementById('locOfficeBtn').addEventListener('click', () => {
-        document.getElementById('locOfficeBtn').classList.add('active');
+    // ปุ่มกดต่างๆ ปลดล็อกอิสระ ไม่ผูกติดกับ GPS สำเร็จหรือไม่
+    document.getElementById('locOfficeBtn').addEventListener('click', function() {
+        this.classList.add('active');
         document.getElementById('locOutsideBtn').classList.remove('active');
         locationTypeHidden.value = "สำนักงาน";
         toggleMissionInput();
-        checkLocation();
     });
 
-    document.getElementById('locOutsideBtn').addEventListener('click', () => {
-        document.getElementById('locOutsideBtn').classList.add('active');
+    document.getElementById('locOutsideBtn').addEventListener('click', function() {
+        this.classList.add('active');
         document.getElementById('locOfficeBtn').classList.remove('active');
         locationTypeHidden.value = "นอกสถานที่";
         toggleMissionInput();
-        checkLocation();
     });
 
-    document.getElementById('actInBtn').addEventListener('click', () => {
-        document.getElementById('actInBtn').classList.add('active');
+    document.getElementById('actInBtn').addEventListener('click', function() {
+        this.classList.add('active');
         document.getElementById('actOutBtn').classList.remove('active');
         actionTypeHidden.value = "เข้างาน";
         toggleMissionInput();
     });
 
-    document.getElementById('actOutBtn').addEventListener('click', () => {
-        document.getElementById('actOutBtn').classList.add('active');
+    document.getElementById('actOutBtn').addEventListener('click', function() {
+        this.classList.add('active');
         document.getElementById('actInBtn').classList.remove('active');
         actionTypeHidden.value = "เลิกงาน";
         toggleMissionInput();
     });
 
-    document.getElementById('time16Btn').addEventListener('click', () => {
-        document.getElementById('time16Btn').classList.add('active');
+    document.getElementById('time16Btn').addEventListener('click', function() {
+        this.classList.add('active');
         document.getElementById('time17Btn').classList.remove('active');
         workTimeScopeHidden.value = "08:00-16:00";
     });
 
-    document.getElementById('time17Btn').addEventListener('click', () => {
-        document.getElementById('time17Btn').classList.add('active');
+    document.getElementById('time17Btn').addEventListener('click', function() {
+        this.classList.add('active');
         document.getElementById('time16Btn').classList.remove('active');
         workTimeScopeHidden.value = "08:00-17:00";
     });
 
     document.getElementById('empType').addEventListener('change', function() {
-        const workTimeGroup = document.getElementById('workTimeGroup');
-        if (this.value === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") {
-            workTimeGroup.style.display = 'block';
-        } else {
-            workTimeGroup.style.display = 'none';
-        }
+        document.getElementById('workTimeGroup').style.display = (this.value === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") ? 'block' : 'none';
     });
 
     function toggleMissionInput() {
         const isOutside = locationTypeHidden.value === "นอกสถานที่";
         const isCheckIn = actionTypeHidden.value === "เข้างาน";
-        if (isOutside && isCheckIn) {
-            missionGroup.style.display = 'block';
-            missionDetail.required = true;
-        } else {
-            missionGroup.style.display = 'none';
-            missionDetail.required = false;
-            missionDetail.value = ""; 
-        }
+        missionGroup.style.display = (isOutside && isCheckIn) ? 'block' : 'none';
+        missionDetail.required = (isOutside && isCheckIn);
     }
 
-    // --- ส่วนเช็คระยะทาง GPS ---
     function checkLocation() {
-        if (!navigator.geolocation) {
-            updateSubmitStatus("Browser ไม่รองรับ GPS", "danger");
-            return;
-        }
-        navigator.geolocation.getCurrentPosition(
-            function(pos) {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                userGps = lat + "," + lon;
-                currentDistance = haversineDistance(lat, lon, TARGET_LAT, TARGET_LON);
-                evaluateButtonStatus(); 
-            },
-            function(err) {
-                if (locationTypeHidden.value === "นอกสถานที่") {
-                    userGps = "ไม่พบพิกัด (นอกสถานที่)";
-                    submitBtn.disabled = false;
-                    submitBtn.className = "btn-submit active-btn";
-                    submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน (นอกสถานที่)";
-                } else {
-                    updateSubmitStatus("❌ โปรดเปิดสิทธิ์เข้าถึง GPS บนมือถือ", "danger");
-                }
-            },
-            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-        );
-    }
-
-    function evaluateButtonStatus() {
-        if (locationTypeHidden.value === "นอกสถานที่") {
-            submitBtn.disabled = false;
-            submitBtn.className = "btn-submit active-btn";
-            submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน (นอกสถานที่)";
-        } else {
-            if (currentDistance !== null) {
-                if (currentDistance <= RADIUS_LIMIT) {
-                    submitBtn.disabled = false;
-                    submitBtn.className = "btn-submit active-btn";
-                    submitBtn.innerText = "📌 บันทึกเวลา (ในพิกัดงาน " + Math.round(currentDistance) + " ม.)";
-                } else {
-                    updateSubmitStatus("❌ อยู่นอกพื้นที่ทำงาน (ห่าง " + Math.round(currentDistance) + " ม.)", "danger");
-                }
-            } else {
-                updateSubmitStatus("กำลังรอตรวจสอบพิกัด GPS...", "default");
-                submitBtn.disabled = true;
-            }
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(pos) { userGps = pos.coords.latitude + "," + pos.coords.longitude; },
+                function(err) { console.log("GPS Error ignored to avoid UI block"); },
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
         }
     }
 
-    function haversineDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371000; 
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-    }
-
-    function updateSubmitStatus(text, type) {
-        submitBtn.innerText = text;
-        if(type === "danger") {
-            submitBtn.className = "btn-submit danger-btn";
-            submitBtn.disabled = true;
-        } else {
-            submitBtn.className = "btn-submit";
-            submitBtn.disabled = true;
-        }
-    }
-
-    // --- ส่วนกล้องถ่ายรูป ---
     function startCamera() {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
                 .then(function(stream) { video.srcObject = stream; })
                 .catch(function(err) {
-                    navigator.mediaDevices.getUserMedia({ video: true })
-                        .then(function(stream) { video.srcObject = stream; });
+                    // หากกล้องเปิดไม่ได้ ให้เปิดโซนเลือกไฟล์ทดแทน
+                    video.style.display = 'none';
+                    fallbackUpload.style.display = 'block';
                 });
+        } else {
+            video.style.display = 'none';
+            fallbackUpload.style.display = 'block';
         }
     }
 
     snapBtn.addEventListener('click', () => {
-        if (video.style.display !== 'none') {
+        if (video.style.display !== 'none' && video.srcObject) {
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth || 640; 
             canvas.height = video.videoHeight || 480;
@@ -507,40 +414,42 @@
         }
     });
 
-    // --- ส่วนบันทึกข้อมูลและส่งค่า ---
+    // ตรวจจับกรณีเลือกไฟล์ภาพแทนถ่ายสด
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                photoData = event.target.result;
+                photoPreview.src = photoData;
+                photoPreview.style.display = 'block';
+                photoTimestamp = new Date();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
     document.getElementById('mainForm').addEventListener('submit', (e) => {
         e.preventDefault();
         
-        if (!photoData || !photoTimestamp) {
-            alert("กรุณากดถ่ายภาพเซลฟี่ยืนยันตัวตนก่อนบันทึกเวลาครับ");
-            return;
-        }
-
-        // ป้องกันชั้นที่ 1: ตรวจสอบรูปภาพเก่า (เกิน 5 นาทีให้ถ่ายใหม่)
-        const nowCheck = new Date();
-        const timeDiffMinutes = (nowCheck - photoTimestamp) / 1000 / 60;
-        if (timeDiffMinutes > 5) {
-            alert("❌ ภาพถ่ายนี้ถ่ายไว้นานเกิน 5 นาทีแล้ว เพื่อความปลอดภัยกรุณากดถ่ายภาพใหม่อีกครั้ง ณ ตำแหน่งปัจจุบันของคุณครับ");
-            video.style.display = 'block'; photoPreview.style.display = 'none';
-            snapBtn.innerText = "📸 กดถ่ายภาพ"; photoData = ""; photoTimestamp = null;
+        if (!photoData) {
+            alert("กรุณาถ่ายภาพหรือเลือกไฟล์รูปภาพก่อนบันทึกเวลาครับ");
             return;
         }
 
         submitBtn.disabled = true;
-        submitBtn.innerText = "กำลังตรวจสอบพิกัดล่าสุดแบบเรียลไทม์...";
+        submitBtn.innerText = "กำลังดึงพิกัดล่าสุด...";
 
-        // ป้องกันชั้นที่ 2: บังคับเช็ค GPS ใหม่สดๆ ตอนกดปุ่มส่ง เพื่อสกัดคนเปิดค้างจากที่ทำงานแล้วไปกดส่งที่บ้าน
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(pos) {
-                    const freshLat = pos.coords.latitude;
-                    const freshLon = pos.coords.longitude;
-                    userGps = freshLat + "," + freshLon;
-                    const freshDistance = haversineDistance(freshLat, freshLon, TARGET_LAT, TARGET_LON);
-
-                    if (locationTypeHidden.value === "สำนักงาน" && freshDistance > RADIUS_LIMIT) {
-                        alert("❌ ตรวจพบพิกัดล่าสุดของคุณอยู่นอกพื้นที่สำนักงาน (ห่าง " + Math.round(freshDistance) + " ม.) ไม่สามารถแอบกดบันทึกย้อนหลังได้ครับ");
-                        checkLocation(); 
+                    userGps = pos.coords.latitude + "," + pos.coords.longitude;
+                    const dist = haversineDistance(pos.coords.latitude, pos.coords.longitude, TARGET_LAT, TARGET_LON);
+                    
+                    if (locationTypeHidden.value === "สำนักงาน" && dist > RADIUS_LIMIT) {
+                        alert("❌ คุณอยู่นอกพื้นที่สำนักงาน (ห่าง " + Math.round(dist) + " ม.) ไม่สามารถลงเวลาในสำนักงานได้ครับ");
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
                         return;
                     }
                     proceedToSubmit();
@@ -550,19 +459,31 @@
                         userGps = "ไม่พบพิกัด (นอกสถานที่)";
                         proceedToSubmit();
                     } else {
-                        alert("❌ ไม่สามารถดึงพิกัดแบบเรียลไทม์ได้ โปรดเปิดสิทธิ์ GPS หรือย้ายไปที่สัญญาณเปิด");
-                        checkLocation();
+                        alert("❌ ระบบบล็อกการลงเวลาเนื่องจากหาพิกัด GPS ไม่พบ โปรดเปิดสิทธิ์เข้าถึง GPS ของเบราว์เซอร์");
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
                     }
                 },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 6000 }
             );
         } else {
             proceedToSubmit();
         }
     });
 
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371000; 
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
     function proceedToSubmit() {
-        submitBtn.innerText = "กำลังบันทึกข้อมูลเข้าระบบ...";
+        submitBtn.innerText = "กำลังบันทึกเข้าระบบ...";
         const now = new Date();
         const currentTimeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const currentDateStr = now.toLocaleDateString('th-TH');
@@ -576,27 +497,18 @@
         let workStatus = "ปกติ";
 
         if (locationType === "นอกสถานที่") {
-            if (actionType === "เข้างาน") {
-                if (hour > 10 || (hour === 10 && minute > 0)) workStatus = "สาย";
-            } else if (actionType === "เลิกงาน") {
-                if (hour < 14) workStatus = "ขาดราชการ";
-            }
+            if (actionType === "เข้างาน" && (hour > 10 || (hour === 10 && minute > 0))) workStatus = "สาย";
+            if (actionType === "เลิกงาน" && hour < 14) workStatus = "ขาดราชการ";
         } else {
             if (actionType === "เข้างาน") {
-                if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") { 
-                    if (hour > 8 || (hour === 8 && minute > 0)) workStatus = "สาย";
-                } else { 
-                    if (hour > 7 || (hour === 7 && minute > 0)) workStatus = "สาย";
-                }
-            } else if (actionType === "เลิกงาน") { 
+                if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" && (hour > 8 || (hour === 8 && minute > 0))) workStatus = "สาย";
+                else if (empType !== "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" && (hour > 7 || (hour === 7 && minute > 0))) workStatus = "สาย";
+            } else if (actionType === "เลิกงาน") {
                 if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") {
-                    if (workTimeScope === "08:00-17:00") {
-                        if (hour < 17) workStatus = "ขาดราชการ";
-                    } else {
-                        if (hour < 16) workStatus = "ขาดราชการ";
-                    }
-                } else { 
-                    if (hour < 16) workStatus = "ขาดราชการ";
+                    if (workTimeScope === "08:00-17:00" && hour < 17) workStatus = "ขาดราชการ";
+                    else if (workTimeScope !== "08:00-17:00" && hour < 16) workStatus = "ขาดราชการ";
+                } else if (hour < 16) {
+                    workStatus = "ขาดราชการ";
                 }
             }
         }
@@ -608,4 +520,42 @@
             fullname: document.getElementById('fullname').value,
             position: document.getElementById('position').value,
             subDepartment: document.getElementById('subDepartment').value,
-            empType: empType === "บุคคลภายนอกที่ช่วย
+            empType: empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" ? `บุคคลภายนอกฯ (${workTimeScope})` : empType, 
+            actionType: `${actionType} (${locationType})${missionLog}`,
+            workStatus: workStatus,
+            gps: userGps,
+            photo: photoData 
+        };
+
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxp_vFEevC9kkToh2vA5fHqjbVT_P7r39P32wH0me8G3PK7PCsBymhKcpxEE0Onm20-/exec";
+
+        fetch(webAppUrl, {
+            method: "POST",
+            mode: "cors", 
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            alertBox.style.display = "block";
+            alertBox.className = "alert-box " + ((workStatus === "สาย" || workStatus === "ขาดราชการ") ? "alert-danger" : "alert-success");
+            alertBox.innerHTML = `🔔 บันทึกสำเร็จ!<br>เวลา: <b>${currentTimeStr} น.</b><br>สถานะ: <b>${workStatus}</b>`;
+            alert(`บันทึกเวลาสำเร็จ!\nผลสรุป: ${workStatus}`);
+            
+            document.getElementById('fullname').value = "";
+            missionDetail.value = "";
+            photoPreview.style.display = 'none';
+            if(video.style.display === 'none' && !fallbackUpload.style.display) video.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
+        })
+        .catch(err => {
+            alertBox.style.display = "block";
+            alertBox.className = "alert-box alert-danger";
+            alertBox.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่";
+            submitBtn.disabled = false;
+            submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
+        });
+    }
+</script>
+</body>
+</html>
