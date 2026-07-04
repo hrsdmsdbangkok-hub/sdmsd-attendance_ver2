@@ -162,7 +162,7 @@
             box-shadow: 0 6px 20px rgba(27, 94, 32, 0.25);
         }
         
-        /* กล่องแจ้งเตือน/บอกพิกัด และระยะห่างเป็นเมตรดั้งเดิม */
+        /* กล่องแจ้งเตือน/บอกระยะห่างดั้งเดิม บังคับเปิดค้างไว้เสมอ */
         .alert-box { 
             padding: 16px; 
             border-radius: 14px; 
@@ -171,7 +171,7 @@
             text-align: center; 
             font-weight: 600; 
             line-height: 1.6;
-            display: block; 
+            display: block !important; 
         }
         
         .alert-success { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); }
@@ -260,7 +260,7 @@
 
         <div class="form-group" id="missionGroup" style="display:none;">
             <label style="color: var(--danger);">📝 ระบุภารกิจและสถานที่ปฏิบัติงานนอกสถานที่ *</label>
-            <input type="text" id="missionDetail" placeholder="ตัวอย่าง: ประชุมวิชาการ ณ โรงแรมรามาการ์เเดนส์">
+            <input type="text" id="missionDetail" placeholder="ตัวอย่าง: ประชมวิชาการ ณ โรงแรมรามาการ์เเดนส์">
         </div>
 
         <div class="form-group" id="workTimeGroup" style="display:none;">
@@ -287,7 +287,7 @@
         <button type="submit" id="submitBtn" class="btn-submit">📌 บันทึกเวลาปฏิบัติงาน</button>
     </form>
 
-    <div id="alertBox" class="alert-box alert-success">📡 กำลังตรวจสอบพิกัดพิกัดของคุณ...</div>
+    <div id="alertBox" class="alert-box alert-success">📡 ระบบกำลังค้นหาสัญญาณดาวเทียม GPS...</div>
 </div>
 
 <script>
@@ -300,6 +300,7 @@
     let photoTimestamp = null; 
     let lastLat = null;
     let lastLon = null;
+    let isSubmitting = false; // ตัวแปรล็อกไว้ไม่ให้หน้าจอดึงระยะห่างแทรกขณะส่งข้อมูล
 
     const submitBtn = document.getElementById('submitBtn');
     const alertBox = document.getElementById('alertBox');
@@ -316,7 +317,7 @@
     const missionDetail = document.getElementById('missionDetail');
 
     window.addEventListener('load', () => {
-        checkLocationQuick(); 
+        startTrackingLocation(); 
         startCamera();
     });
 
@@ -325,7 +326,7 @@
         document.getElementById('locOutsideBtn').classList.remove('active');
         locationTypeHidden.value = "สำนักงาน";
         toggleMissionInput();
-        updateGpsDisplay(); // อัปเดตการแสดงผลทันทีเมื่อเปลี่ยนโหมด
+        updateGpsDisplay(); 
     });
 
     document.getElementById('locOutsideBtn').addEventListener('click', function() {
@@ -333,7 +334,7 @@
         document.getElementById('locOfficeBtn').classList.remove('active');
         locationTypeHidden.value = "นอกสถานที่";
         toggleMissionInput();
-        updateGpsDisplay(); // อัปเดตการแสดงผลทันทีเมื่อเปลี่ยนโหมด
+        updateGpsDisplay(); 
     });
 
     document.getElementById('actInBtn').addEventListener('click', function() {
@@ -373,8 +374,9 @@
         missionDetail.required = (isOutside && isCheckIn);
     }
 
-    // ฟังก์ชันคำนวณและแสดงผลระยะห่างลงกล่อง Alert Box สไตล์ดั้งเดิม
+    // ฟังก์ชันคำนวณระยะห่างจริง (เมตร) อัปเดตลงกล่องแบบเรียลไทม์
     function updateGpsDisplay() {
+        if (isSubmitting) return; // ถ้ากำลังบันทึกข้อมูล ให้ข้ามการอัปเดตระยะห่างชั่วคราว
         if (lastLat === null || lastLon === null) return;
 
         if (locationTypeHidden.value === "สำนักงาน") {
@@ -383,21 +385,21 @@
 
             if (dist <= RADIUS_LIMIT) {
                 alertBox.className = "alert-box alert-success";
-                alertBox.innerHTML = `📍 พิกัดของคุณห่างจากสำนักงาน: <b>${roundedDist} เมตร</b><br><span style="color:#1b5e20; font-size:13px;">(อยู่ในรัศมีล็อกพิกัด 500 ม. ลงเวลาได้ปกติ)</span>`;
+                alertBox.innerHTML = `📍 พิกัดของคุณห่างจากสำนักงาน: <b>${roundedDist} เมตร</b><br><span style="color:#1b5e20; font-size:13px;">(อยู่ในรัศมีล็อกพิกัด 500 ม. สามารถลงเวลาได้ปกติ)</span>`;
             } else {
                 alertBox.className = "alert-box alert-danger";
                 alertBox.innerHTML = `⚠️ คุณอยู่ห่างจากสำนักงานเกินไป: <b style="text-decoration:underline;">${roundedDist} เมตร</b><br><span style="font-size:13px;">(จำกัดรัศมี 500 ม. โปรดขยับเข้าใกล้บริเวณสำนักงาน)</span>`;
             }
         } else {
-            // ถ้านอกสถานที่ แสดงเป็นค่าพิกัดปกติ
             alertBox.className = "alert-box alert-success";
-            alertBox.innerHTML = `📍 พิกัดปัจจุบันของคุณ: <b>${lastLat.toFixed(5)}, ${lastLon.toFixed(5)}</b> (โหมดนอกสถานที่)`;
+            alertBox.innerHTML = `📍 พิกัดปัจจุบันของคุณ: <b>${lastLat.toFixed(5)}, ${lastLon.toFixed(5)}</b><br><span style="font-size:13px;">(เปิดโหมดบันทึกปฏิบัติงานนอกสถานที่แล้ว)</span>`;
         }
     }
 
-    function checkLocationQuick() {
+    // ฟังก์ชันเฝ้าดูพิกัดดาวเทียมแบบเคลื่อนไหวตลอดเวลา (Watch Position)
+    function startTrackingLocation() {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
+            navigator.geolocation.watchPosition(
                 function(pos) { 
                     lastLat = pos.coords.latitude;
                     lastLon = pos.coords.longitude;
@@ -405,14 +407,16 @@
                     updateGpsDisplay();
                 },
                 function(err) { 
-                    alertBox.className = "alert-box alert-danger";
-                    alertBox.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b>ไม่พบพิกัด (โปรดเปิดสิทธิ์ GPS ของเบราว์เซอร์)</b>`;
+                    if (!isSubmitting) {
+                        alertBox.className = "alert-box alert-danger";
+                        alertBox.innerHTML = `📡 พิกัดล้มเหลว: <b>โปรดอนุญาตสิทธิ์เข้าถึงพิกัด GPS บนเบราว์เซอร์</b>`;
+                    }
                 },
-                { enableHighAccuracy: false, timeout: 4000, maximumAge: 30000 }
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         } else {
             alertBox.className = "alert-box alert-danger";
-            alertBox.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b>เบราว์เซอร์ไม่รองรับระบบ GPS</b>`;
+            alertBox.innerHTML = `📡 ระบบล้มเหลว: เบราว์เซอร์ไม่รองรับระบบพิกัด GPS`;
         }
     }
 
@@ -469,10 +473,11 @@
             return;
         }
 
+        isSubmitting = true;
         submitBtn.disabled = true;
         submitBtn.innerText = "กำลังตรวจสอบพิกัดล่าสุด...";
         alertBox.className = "alert-box alert-success";
-        alertBox.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b>กำลังดึงพิกัดความละเอียดสูงเพื่อล็อกรัศมี...</b>`;
+        alertBox.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b>กำลังล็อกพิกัดความละเอียดสูง...</b>`;
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -485,6 +490,7 @@
                     
                     if (locationTypeHidden.value === "สำนักงาน" && dist > RADIUS_LIMIT) {
                         alert("❌ คุณอยู่นอกพื้นที่สำนักงาน (ห่าง " + Math.round(dist) + " ม.) ไม่สามารถลงเวลาในสำนักงานได้ครับ");
+                        isSubmitting = false;
                         submitBtn.disabled = false;
                         submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
                         updateGpsDisplay();
@@ -498,9 +504,10 @@
                         proceedToSubmit();
                     } else {
                         alert("❌ ระบบบล็อกการลงเวลาเนื่องจากหาพิกัด GPS ไม่พบ โปรดเปิดสิทธิ์เข้าถึง GPS ของเบราว์เซอร์");
+                        isSubmitting = false;
                         submitBtn.disabled = false;
                         submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
-                        checkLocationQuick();
+                        updateGpsDisplay();
                     }
                 },
                 { enableHighAccuracy: true, timeout: 5000 } 
@@ -589,18 +596,25 @@
             missionDetail.value = "";
             photoPreview.style.display = 'none';
             if(video.style.display === 'none' && !fallbackUpload.style.display) video.style.display = 'block';
+            
             submitBtn.disabled = false;
             submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
             
-            // แสดงสถานะบันทึกสำเร็จทิ้งไว้ 6 วินาที ก่อนดึงระบบคำนวณระยะห่างเป็นเมตรกลับมาโชว์ใหม่ตามปกติ
-            setTimeout(checkLocationQuick, 6000);
+            // แสดงหน้าจอสำเร็จทิ้งไว้ 7 วินาที แล้วจึงปล่อยให้ระบบวนกลับไปตรวจระยะห่างเมตรตามเดิม
+            setTimeout(() => {
+                isSubmitting = false;
+                updateGpsDisplay();
+            }, 7000);
         })
         .catch(err => {
             alertBox.className = "alert-box alert-danger";
             alertBox.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง";
             submitBtn.disabled = false;
             submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
-            setTimeout(checkLocationQuick, 3000);
+            setTimeout(() => {
+                isSubmitting = false;
+                updateGpsDisplay();
+            }, 3000);
         });
     }
 </script>
