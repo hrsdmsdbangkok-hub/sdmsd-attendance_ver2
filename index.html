@@ -100,7 +100,7 @@
             background-color: #ffffff;
         }
 
-        /* 🕹️ ปุ่มกดสลับสถานะแบบโมเดิร์น (Segmented Control) แทนนช่อง Dropdown เดิม */
+        /* 🕹️ ปุ่มกดสลับสถานะแบบโมเดิร์น (Segmented Control) */
         .segmented-control {
             display: flex;
             gap: 8px;
@@ -127,7 +127,6 @@
             gap: 6px;
         }
 
-        /* เมื่อปุ่มถูกเลือก */
         .btn-segment.active {
             background: #ffffff;
             color: var(--primary);
@@ -197,7 +196,6 @@
             box-shadow: 0 6px 20px rgba(198, 40, 40, 0.25) !important;
         }
         
-        /* 🚨 สไตล์กล่องแจ้งเตือนผลลัพธ์ */
         .alert-box { 
             padding: 16px; 
             border-radius: 14px; 
@@ -210,7 +208,6 @@
             animation: slideDown 0.3s ease;
         }
         
-        /* ผลลัพธ์ปกติ -> สีเขียว */
         .alert-success { 
             background: var(--primary-light) !important; 
             color: var(--primary) !important; 
@@ -218,7 +215,6 @@
             box-shadow: 0 4px 12px rgba(46, 125, 50, 0.08);
         }
         
-        /* ผลลัพธ์สายหรือขาดราชการ -> เปลี่ยนเป็นสีแดง */
         .alert-danger { 
             background: var(--danger-light) !important; 
             color: var(--danger) !important; 
@@ -319,10 +315,11 @@
 
         <div class="form-group" id="workTimeGroup" style="display:none;">
             <label>ช่วงเวลาปฏิบัติงาน (เฉพาะบุคคลภายนอกฯ)</label>
-            <select id="workTimeScope">
-                <option value="08:00-16:00">08:00 น. - 16:00 น.</option>
-                <option value="08:00-17:00">08:00 น. - 17:00 น.</option>
-            </select>
+            <div class="segmented-control">
+                <button type="button" class="btn-segment active" data-target="workTimeScope" data-value="08:00-16:00">⏱️ 08:00 - 16:00 น.</button>
+                <button type="button" class="btn-segment" data-target="workTimeScope" data-value="08:00-17:00">⏱️ 08:00 - 17:00 น.</button>
+            </div>
+            <input type="hidden" id="workTimeScope" value="08:00-16:00">
         </div>
 
         <div class="camera-section">
@@ -356,6 +353,7 @@
     
     const locationTypeHidden = document.getElementById('locationType');
     const actionTypeHidden = document.getElementById('actionType');
+    const workTimeScopeHidden = document.getElementById('workTimeScope');
     const missionGroup = document.getElementById('missionGroup');
     const missionDetail = document.getElementById('missionDetail');
 
@@ -365,7 +363,6 @@
         bindSegmentButtons();
     });
 
-    // 🕹️ ฟังก์ชันเปลี่ยนแท็บปุ่มกดและผูกค่าลง Hidden Input อัตโนมัติ
     function bindSegmentButtons() {
         const segments = document.querySelectorAll('.btn-segment');
         segments.forEach(btn => {
@@ -373,17 +370,12 @@
                 const targetId = this.getAttribute('data-target');
                 const value = this.getAttribute('data-value');
                 
-                // ค้นหากลุ่มปุ่มเดียวกันเพื่อเคลียร์คลาส active
                 const siblingButtons = document.querySelectorAll(`.btn-segment[data-target="${targetId}"]`);
                 siblingButtons.forEach(b => b.classList.remove('active'));
                 
-                // ไฮไลต์ปุ่มที่คลิก
                 this.classList.add('active');
-                
-                // บันทึกค่าลง Input ลับ
                 document.getElementById(targetId).value = value;
                 
-                // เรียกทำงานลอจิกการเช็คเงื่อนไขฟอร์ม
                 if (targetId === 'locationType') {
                     evaluateButtonStatus();
                     checkLocation();
@@ -535,7 +527,7 @@
 
         const empType = document.getElementById('empType').value;
         const actionType = actionTypeHidden.value;
-        const workTimeScope = document.getElementById('workTimeScope').value; 
+        const workTimeScope = workTimeScopeHidden.value; 
         const locationType = locationTypeHidden.value;
         let workStatus = "ปกติ";
 
@@ -576,10 +568,10 @@
             actionType: `${actionType} (${locationType})${missionLog}`,
             workStatus: workStatus,
             gps: userGps,
-            photo: photoData
+            photo: photoData 
         };
 
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbxXX_mAQFy3Dr2Vnjgm9H1_VgufswQ3s21VmavvMRIR4n8-wvfLRK6uRqNvtS7MD6bC/exec";
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxp_vFEevC9kkToh2vA5fHqjbVT_P7r39P32wH0me8G3PK7PCsBymhKcpxEE0Onm20-/exec";
 
         fetch(webAppUrl, {
             method: "POST",
@@ -589,11 +581,8 @@
         })
         .then(response => {
             alertBox.style.display = "block";
-            
-            // 🚨 เคลียร์คลาสเก่าออกให้หมดก่อนประเมินผลสีพื้นหลังใหม่
             alertBox.classList.remove('alert-success', 'alert-danger');
             
-            // ตรวจสอบเงื่อนไขการแยกสี (หาก "สาย" หรือ "ขาดราชการ" ให้สลับเป็นสีแดงเด่นชัด)
             if (workStatus === "สาย" || workStatus === "ขาดราชการ") {
                 alertBox.classList.add('alert-danger');
             } else {
@@ -604,7 +593,6 @@
             
             alert(`บันทึกเวลาสำเร็จ!\nประเภท: ${actionType} (${locationType})\nเวลา: ${currentTimeStr} น.\nผลสรุป: ${workStatus}`);
             
-            // รีเซ็ตค่าหลังบันทึก
             document.getElementById('fullname').value = "";
             missionDetail.value = "";
             photoPreview.style.display = 'none';
