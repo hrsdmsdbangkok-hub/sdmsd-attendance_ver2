@@ -233,7 +233,7 @@
             <label>ประเภทของพนักงาน</label>
             <select id="empType" required>
                 <option value="ลูกจ้างประจำ">ลูกจ้างประจำ</option>
-                <option value="ลูกจราว">ลูกจ้างชั่วคราว</option>
+                <option value="ลูกจ้างชั่วคราว">ลูกจ้างชั่วคราว</option>
                 <option value="พนักงานประกันสังคม">พนักงานประกันสังคม</option>
                 <option value="บุคคลภายนอกที่ช่วยปฏิบัติราชการ">บุคคลภายนอกที่ช่วยปฏิบัติราชการ</option>
             </select>
@@ -409,7 +409,7 @@
                         alertBox.innerHTML = `📡 พิกัดล้มเหลว: <b>โปรดอนุญาตสิทธิ์เข้าถึงพิกัด GPS บนเบราว์เซอร์</b>`;
                     }
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 } /* ปรับเวลาหน่วงดึงพิกัด Real-time เป็น 7 วินาที */
             );
         } else {
             alertBox.className = "alert-box alert-danger";
@@ -511,7 +511,7 @@
                         updateGpsDisplay();
                     }
                 },
-                { enableHighAccuracy: true, timeout: 10000 } 
+                { enableHighAccuracy: true, timeout: 7000 } /* ปรับเวลาหน่วงเช็คพิกัดก่อนส่งข้อมูลเป็น 7 วินาที */
             );
         } else {
             proceedToSubmit();
@@ -574,8 +574,8 @@
             photo: photoData 
         };
 
-        // ⚠️ รหัส Web App URL ของพี่ นำมาใส่แทนที่ลิงก์ในเครื่องหมายคำพูดด้านล่างนี้ได้เลยครับ
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbyddtEfC0yAha-Jmfp_Dedt40_uItvsyzlBjSlyX7OQcbxgcyw36aINaAuqpGwsqt-t/exec";
+        // ⚠️ นำ URL เว็บแอป (Web App URL) ของพี่มาใส่ในเครื่องหมายคำพูดด้านล่างนี้ได้เลยครับ
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbw-TVsFLMQIbO-fQT2s4N-zKpMkv3YEurQ7NUl9998ecFtpyhAL1sxGMsNFDgOHrGXK/exec";
 
         fetch(webAppUrl, {
             method: "POST",
@@ -587,7 +587,7 @@
             alertBox.classList.remove('alert-success', 'alert-danger');
             if (workStatus === "สาย" || workStatus === "ขาดราชการ") {
                 alertBox.classList.add('alert-danger');
-            } else {https://script.google.com/macros/s/AKfycbzCwI2HPatsTNZ92Jkso9bZ0Pzlnj523yzCWW7_5Ms8W2jGqzIUIkJwNvGwYZyc1qfT/exec
+            } else {
                 alertBox.classList.add('alert-success');
             }
             alertBox.innerHTML = `🔔 บันทึกสำเร็จเรียบร้อย!<br>คุณได้ลงเวลา ${actionType} (${locationType})<br>เวลา: <b>${currentTimeStr} น.</b><br>สถานะระบบสรุป: <span style="text-decoration:underline; font-weight:700;">${workStatus}</span>`;
