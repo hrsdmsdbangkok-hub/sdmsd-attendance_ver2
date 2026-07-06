@@ -340,13 +340,11 @@
     const otherPositionGroup = document.getElementById('otherPositionGroup');
     const otherPositionDetail = document.getElementById('otherPositionDetail');
 
-    // ส่วนประมวลผลดึงข้อมูลเดิมที่บันทึกไว้ในเบราว์เซอร์มาแสดงผลอัตโนมัติเมื่อเปิดหน้าเว็บ
     window.addEventListener('load', () => {
         startTrackingLocation(); 
         startCamera();
         setInterval(checkPhotoAge, 1000);
 
-        // ดึงข้อมูลเก่าที่เคยจำไว้มาหยอดในช่องกรอกข้อมูล
         if(localStorage.getItem('saved_fullname')) {
             document.getElementById('fullname').value = localStorage.getItem('saved_fullname');
         }
@@ -441,6 +439,7 @@
                 alertBox.className = "alert-box alert-success";
                 alertBox.innerHTML = `📍 พิกัดของคุณห่างจากสำนักงาน: <b>${roundedDist} เมตร</b><br><span style="color:#1b5e20; font-size:13px;">(อยู่ในรัศมีล็อกพิกัด สามารถลงเวลาได้ปกติ)</span>`;
             } else {
+                // แก้ไข: เอาข้อความคำว่า "จำกัดรัศมี 500 ม." ออกตามสั่งเรียบร้อยครับ
                 alertBox.className = "alert-box alert-danger";
                 alertBox.innerHTML = `⚠️ คุณอยู่ห่างจากสำนักงานเกินไป: <b style="text-decoration:underline;">${roundedDist} เมตร</b><br><span style="font-size:13px;">(โปรดขยับเข้าใกล้บริเวณสำนักงาน)</span>`;
             }
@@ -574,6 +573,7 @@
                     
                     const dist = haversineDistance(lastLat, lastLon, TARGET_LAT, TARGET_LON);
                     
+                    // ยังคงตรวจสอบเงื่อนไขล็อกรัศมี 500 เมตร ไว้เข้มงวดเหมือนเดิม
                     if (locationTypeHidden.value === "สำนักงาน" && dist > RADIUS_LIMIT) {
                         alert("❌ คุณอยู่นอกพื้นที่สำนักงาน (ห่าง " + Math.round(dist) + " ม.) ไม่สามารถลงเวลาในสำนักงานได้ครับ");
                         isSubmitting = false;
@@ -640,7 +640,6 @@
         const locationType = locationTypeHidden.value;
         let workStatus = "ปกติ";
 
-        // จดจำประวัติข้อมูลลงในเครื่องของผู้ใช้งานทันทีก่อนส่งข้อมูล (ไม่รบกวนหลังบ้าน)
         localStorage.setItem('saved_fullname', inputFullname);
         localStorage.setItem('saved_position', inputPosition);
         localStorage.setItem('saved_other_position', otherPositionDetail.value);
@@ -683,6 +682,7 @@
             photo: photoData 
         };
 
+        // ลิงก์เชื่อมต่อไปยัง Folder ใหม่ที่พี่เซ็ตอัปเรียบร้อยแล้ว
         const webAppUrl = "https://script.google.com/macros/s/AKfycbyhbJGKwB4RJVetT-1B47Zv927f_2J8MSR3kZK7Qplj2G8_dtSse3cdJW6VAZBY9_Su/exec";
 
         fetch(webAppUrl, {
@@ -702,7 +702,6 @@
             
             alert(`บันทึกเวลาสำเร็จ!\nประเภท: ${actionType} (${locationType})\nเวลา: ${currentTimeStr} น.\nผลสรุป: ${workStatus}`);
             
-            // หมายเหตุ: เรายกเลิกเคลียร์ค่า ฟอร์มทั้งหมด เพื่อให้ระบบสามารถคงข้อความจำหน้าจอไว้ให้พนักงานกดในวันถัดไปได้ทันที
             missionDetail.value = "";
             photoPreview.style.display = 'none';
             photoData = "";
