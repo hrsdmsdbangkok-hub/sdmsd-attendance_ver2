@@ -243,9 +243,10 @@
             <label>ประเภทของพนักงาน</label>
             <select id="empType" required>
                 <option value="ลูกจ้างประจำ">ลูกจ้างประจำ</option>
-                <option value="ลูกจ้างชั่วคราว">ลูกจ้างชั่วคราว</option>
+                <option value="ลูกจ้างชราว">ลูกจ้างชั่วคราว</option>
                 <option value="พนักงานประกันสังคม">พนักงานประกันสังคม</option>
                 <option value="บุคคลภายนอกที่ช่วยปฏิบัติราชการ">บุคคลภายนอกที่ช่วยปฏิบัติราชการ</option>
+                <option value="ข้าราชการ">ข้าราชการ</option>
             </select>
         </div>
 
@@ -298,7 +299,6 @@
 
     <div id="alertBox" class="alert-box alert-success">📡 ระบบกำลังค้นหาสัญญาณดาวเทียม GPS...</div>
     
-    <!-- ข้อความเครดิตผู้จัดทำตัวเล็กๆ ตอนท้ายระบบตามสั่งครับ -->
     <div class="credit-text">
         จัดทำโดย กลุ่มงานการเจ้าหน้าที่<br>สำนักงานเลขานุการ สำนักการแพทย์
     </div>
@@ -334,7 +334,6 @@
     window.addEventListener('load', () => {
         startTrackingLocation(); 
         startCamera();
-        // ตรวจสอบอายุม่านชัตเตอร์รูปภาพทุก ๆ 1 วินาที
         setInterval(checkPhotoAge, 1000);
     });
 
@@ -384,14 +383,12 @@
         document.getElementById('workTimeGroup').style.display = (this.value === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") ? 'block' : 'none';
     });
 
-    // ข้อ 3: แสดงช่องระบุภารกิจและสถานที่นอกสถานที่ ทั้งตอน เข้างาน และ เลิกงาน
     function toggleMissionInput() {
         const isOutside = locationTypeHidden.value === "นอกสถานที่";
         missionGroup.style.display = isOutside ? 'block' : 'none';
         missionDetail.required = isOutside;
     }
 
-    // ข้อ 4: ตัดข้อความจำกัดรัศมี 500 ม. ออก
     function updateGpsDisplay() {
         if (isSubmitting) return; 
         if (lastLat === null || lastLon === null) return;
@@ -413,7 +410,6 @@
         }
     }
 
-    // ข้อ 1: ปรับเป็นพิกัดความละเอียดทั่วไป เพื่อโหลดเร็วและเสถียร หน่วงสั้นลง
     function startTrackingLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition(
@@ -437,7 +433,6 @@
         }
     }
 
-    // ข้อ 5: บังคับให้สิทธิ์กล้องก่อนเปิดโหมดเลือกไฟล์ภาพ
     function startCamera() {
         if (localStream) {
             localStream.getTracks().forEach(track => track.stop());
@@ -449,11 +444,11 @@
                     localStream = stream;
                     video.srcObject = stream; 
                     video.style.display = 'block';
-                    fallbackUpload.style.display = 'none'; // ซ่อนปุ่มอัปโหลดไฟล์ไว้ก่อน
+                    fallbackUpload.style.display = 'none'; 
                 })
                 .catch(function(err) {
                     video.style.display = 'none';
-                    fallbackUpload.style.display = 'block'; // กล้องเสียหรือปฏิเสธสิทธิ์จริง ๆ ถึงจะยอมให้ใช้ไฟล์
+                    fallbackUpload.style.display = 'block'; 
                 });
         } else {
             video.style.display = 'none';
@@ -469,7 +464,7 @@
             canvas.getContext('2d').drawImage(video, 0, 0);
             photoData = canvas.toDataURL('image/jpeg', 0.6); 
             photoPreview.src = photoData;
-            photoTimestamp = new Date(); // บันทึกเวลาที่ถ่ายรูป
+            photoTimestamp = new Date(); 
             video.style.display = 'none'; photoPreview.style.display = 'block';
             snapBtn.innerText = "🔄 ถ่ายใหม่อีกครั้ง";
         } else {
@@ -479,7 +474,6 @@
         }
     });
 
-    // ข้อ 2: ฟังก์ชันตรวจสอบอายุภาพถ่ายไม่ให้ค้างเกิน 2 นาที (120,000 มิลลิวินาที)
     function checkPhotoAge() {
         if (photoTimestamp && photoData) {
             const now = new Date();
@@ -517,7 +511,6 @@
             return;
         }
 
-        // ตรวจสอบอายุภาพถ่ายอีกชั้นในจังหวะกดส่งฟอร์ม
         if (photoTimestamp) {
             const now = new Date();
             if (now.getTime() - photoTimestamp.getTime() > 120000) {
@@ -560,7 +553,6 @@
                         }
                         proceedToSubmit();
                     } else {
-                        // ดึงพิกัดล่าสุดที่จำได้แก้ขัดให้เลยเพื่อความรวดเร็วและไม่บล็อกเครื่องผู้ใช้
                         if (lastLat !== null && lastLon !== null) {
                             userGps = lastLat + "," + lastLon;
                             proceedToSubmit();
@@ -605,13 +597,15 @@
         const locationType = locationTypeHidden.value;
         let workStatus = "ปกติ";
 
+        // แก้ไข: ปรับระบบเงื่อนไขเวลา "นอกสถานที่" ตามข้อตกลงล่าสุด
         if (locationType === "นอกสถานที่") {
             if (actionType === "เข้างาน" && (hour > 10 || (hour === 10 && minute > 0))) workStatus = "สาย";
-            if (actionType === "เลิกงาน" && hour < 14) workStatus = "ขาดราชการ";
+            // บล็อกเวลาเลิกงานนอกสถานที่: ต่ำกว่า 14:30 น. (บ่ายสองครึ่ง) ถือว่า ขาดราชการ สำหรับพนักงานทุกกลุ่มทันที
+            if (actionType === "เลิกงาน" && (hour < 14 || (hour === 14 && minute < 30))) workStatus = "ขาดราชการ";
         } else {
             if (actionType === "เข้างาน") {
-                if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" && (hour > 8 || (hour === 8 && minute > 0))) workStatus = "สาย";
-                else if (empType !== "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" && (hour > 7 || (hour === 7 && minute > 0))) workStatus = "สาย";
+                if ((empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" || empType === "ข้าราชการ") && (hour > 8 || (hour === 8 && minute > 0))) workStatus = "สาย";
+                else if (empType !== "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" && empType !== "ข้าราชการ" && (hour > 7 || (hour === 7 && minute > 0))) workStatus = "สาย";
             } else if (actionType === "เลิกงาน") {
                 if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") {
                     if (workTimeScope === "08:00-17:00" && hour < 17) workStatus = "ขาดราชการ";
@@ -636,7 +630,7 @@
             photo: photoData 
         };
 
-        // URL เว็บแอป (Web App URL) ดั้งเดิมของพี่ ไม่ถูกกระทบและถูกดึงมาใช้เหมือนเดิม 100% ครับ
+        // ตรวจสอบ Web App URL หลังบ้านของพี่ก่อนกดยืนยันเซฟฝั่งหน้าบ้านเสร็จเรียบร้อยครับ
         const webAppUrl = "https://script.google.com/macros/s/AKfycbxp_vFEevC9kkToh2vA5fHqjbVT_P7r39P32wH0me8G3PK7PCsBymhKcpxEE0Onm20-/exec";
 
         fetch(webAppUrl, {
