@@ -439,7 +439,6 @@
                 alertBox.className = "alert-box alert-success";
                 alertBox.innerHTML = `📍 พิกัดของคุณห่างจากสำนักงาน: <b>${roundedDist} เมตร</b><br><span style="color:#1b5e20; font-size:13px;">(อยู่ในรัศมีล็อกพิกัด สามารถลงเวลาได้ปกติ)</span>`;
             } else {
-                // แก้ไข: เอาข้อความคำว่า "จำกัดรัศมี 500 ม." ออกตามสั่งเรียบร้อยครับ
                 alertBox.className = "alert-box alert-danger";
                 alertBox.innerHTML = `⚠️ คุณอยู่ห่างจากสำนักงานเกินไป: <b style="text-decoration:underline;">${roundedDist} เมตร</b><br><span style="font-size:13px;">(โปรดขยับเข้าใกล้บริเวณสำนักงาน)</span>`;
             }
@@ -573,14 +572,14 @@
                     
                     const dist = haversineDistance(lastLat, lastLon, TARGET_LAT, TARGET_LON);
                     
-                    // ยังคงตรวจสอบเงื่อนไขล็อกรัศมี 500 เมตร ไว้เข้มงวดเหมือนเดิม
+                    // ปรับปรุงระบบล็อกดาวน์: บล็อกสิทธิ์ขาดทั้งเข้าและเลิกงาน หากอยู่นอกรัศมี 500 เมตร
                     if (locationTypeHidden.value === "สำนักงาน" && dist > RADIUS_LIMIT) {
-                        alert("❌ คุณอยู่นอกพื้นที่สำนักงาน (ห่าง " + Math.round(dist) + " ม.) ไม่สามารถลงเวลาในสำนักงานได้ครับ");
+                        alert("❌ อยู่นอกรัศมีสำนักงานไม่สามารถลงเวลาได้");
                         isSubmitting = false;
                         submitBtn.disabled = false;
                         submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
                         updateGpsDisplay();
-                        return;
+                        return; // สั่งหยุดระบบทันที ไม่ให้ส่งข้อมูลไปหลังบ้าน
                     }
                     proceedToSubmit();
                 },
@@ -593,7 +592,17 @@
                         }
                         proceedToSubmit();
                     } else {
+                        // ปรับปรุงระบบล็อกดาวน์ส่วน Fallback: หากเลือกในสำนักงาน แต่ดึงพิกัดไม่ได้และมีค่าพิกัดเก่าที่เกินระยะ 500 ม.
                         if (lastLat !== null && lastLon !== null) {
+                            const dist = haversineDistance(lastLat, lastLon, TARGET_LAT, TARGET_LON);
+                            if (dist > RADIUS_LIMIT) {
+                                alert("❌ อยู่นอกรัศมีสำนักงานไม่สามารถลงเวลาได้");
+                                isSubmitting = false;
+                                submitBtn.disabled = false;
+                                submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
+                                updateGpsDisplay();
+                                return;
+                            }
                             userGps = lastLat + "," + lastLon;
                             proceedToSubmit();
                         } else {
@@ -682,7 +691,6 @@
             photo: photoData 
         };
 
-        // ลิงก์เชื่อมต่อไปยัง Folder ใหม่ที่พี่เซ็ตอัปเรียบร้อยแล้ว
         const webAppUrl = "https://script.google.com/macros/s/AKfycbyhbJGKwB4RJVetT-1B47Zv927f_2J8MSR3kZK7Qplj2G8_dtSse3cdJW6VAZBY9_Su/exec";
 
         fetch(webAppUrl, {
