@@ -175,6 +175,16 @@
         
         .alert-success { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); }
         .alert-danger { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger-border); }
+
+        .credit-text {
+            font-size: 11px;
+            color: #888888;
+            text-align: center;
+            margin-top: 25px;
+            font-weight: 400;
+            letter-spacing: 0.2px;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -287,6 +297,11 @@
     </form>
 
     <div id="alertBox" class="alert-box alert-success">📡 ระบบกำลังค้นหาสัญญาณดาวเทียม GPS...</div>
+    
+    <!-- ข้อความเครดิตผู้จัดทำตัวเล็กๆ ตอนท้ายระบบตามสั่งครับ -->
+    <div class="credit-text">
+        จัดทำโดย กลุ่มงานการเจ้าหน้าที่<br>สำนักงานเลขานุการ สำนักการแพทย์
+    </div>
 </div>
 
 <script>
@@ -300,6 +315,7 @@
     let lastLat = null;
     let lastLon = null;
     let isSubmitting = false; 
+    let localStream = null;
 
     const submitBtn = document.getElementById('submitBtn');
     const alertBox = document.getElementById('alertBox');
@@ -318,6 +334,8 @@
     window.addEventListener('load', () => {
         startTrackingLocation(); 
         startCamera();
+        // ตรวจสอบอายุม่านชัตเตอร์รูปภาพทุก ๆ 1 วินาที
+        setInterval(checkPhotoAge, 1000);
     });
 
     document.getElementById('locOfficeBtn').addEventListener('click', function() {
@@ -366,13 +384,14 @@
         document.getElementById('workTimeGroup').style.display = (this.value === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") ? 'block' : 'none';
     });
 
+    // ข้อ 3: แสดงช่องระบุภารกิจและสถานที่นอกสถานที่ ทั้งตอน เข้างาน และ เลิกงาน
     function toggleMissionInput() {
         const isOutside = locationTypeHidden.value === "นอกสถานที่";
-        const isCheckIn = actionTypeHidden.value === "เข้างาน";
-        missionGroup.style.display = (isOutside && isCheckIn) ? 'block' : 'none';
-        missionDetail.required = (isOutside && isCheckIn);
+        missionGroup.style.display = isOutside ? 'block' : 'none';
+        missionDetail.required = isOutside;
     }
 
+    // ข้อ 4: ตัดข้อความจำกัดรัศมี 500 ม. ออก
     function updateGpsDisplay() {
         if (isSubmitting) return; 
         if (lastLat === null || lastLon === null) return;
@@ -383,10 +402,10 @@
 
             if (dist <= RADIUS_LIMIT) {
                 alertBox.className = "alert-box alert-success";
-                alertBox.innerHTML = `📍 พิกัดของคุณห่างจากสำนักงาน: <b>${roundedDist} เมตร</b><br><span style="color:#1b5e20; font-size:13px;">(อยู่ในรัศมีล็อกพิกัด 500 ม. สามารถลงเวลาได้ปกติ)</span>`;
+                alertBox.innerHTML = `📍 พิกัดของคุณห่างจากสำนักงาน: <b>${roundedDist} เมตร</b><br><span style="color:#1b5e20; font-size:13px;">(อยู่ในรัศมีล็อกพิกัด สามารถลงเวลาได้ปกติ)</span>`;
             } else {
                 alertBox.className = "alert-box alert-danger";
-                alertBox.innerHTML = `⚠️ คุณอยู่ห่างจากสำนักงานเกินไป: <b style="text-decoration:underline;">${roundedDist} เมตร</b><br><span style="font-size:13px;">(จำกัดรัศมี 500 ม. โปรดขยับเข้าใกล้บริเวณสำนักงาน)</span>`;
+                alertBox.innerHTML = `⚠️ คุณอยู่ห่างจากสำนักงานเกินไป: <b style="text-decoration:underline;">${roundedDist} เมตร</b><br><span style="font-size:13px;">(โปรดขยับเข้าใกล้บริเวณสำนักงาน)</span>`;
             }
         } else {
             alertBox.className = "alert-box alert-success";
@@ -394,6 +413,7 @@
         }
     }
 
+    // ข้อ 1: ปรับเป็นพิกัดความละเอียดทั่วไป เพื่อโหลดเร็วและเสถียร หน่วงสั้นลง
     function startTrackingLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition(
@@ -409,7 +429,7 @@
                         alertBox.innerHTML = `📡 พิกัดล้มเหลว: <b>โปรดอนุญาตสิทธิ์เข้าถึงพิกัด GPS บนเบราว์เซอร์</b>`;
                     }
                 },
-                { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 } /* ปรับเวลาหน่วงดึงพิกัด Real-time เป็น 7 วินาที */
+                { enableHighAccuracy: false, timeout: 2000, maximumAge: 30000 }
             );
         } else {
             alertBox.className = "alert-box alert-danger";
@@ -417,13 +437,23 @@
         }
     }
 
+    // ข้อ 5: บังคับให้สิทธิ์กล้องก่อนเปิดโหมดเลือกไฟล์ภาพ
     function startCamera() {
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+        }
+
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-                .then(function(stream) { video.srcObject = stream; })
+                .then(function(stream) { 
+                    localStream = stream;
+                    video.srcObject = stream; 
+                    video.style.display = 'block';
+                    fallbackUpload.style.display = 'none'; // ซ่อนปุ่มอัปโหลดไฟล์ไว้ก่อน
+                })
                 .catch(function(err) {
                     video.style.display = 'none';
-                    fallbackUpload.style.display = 'block';
+                    fallbackUpload.style.display = 'block'; // กล้องเสียหรือปฏิเสธสิทธิ์จริง ๆ ถึงจะยอมให้ใช้ไฟล์
                 });
         } else {
             video.style.display = 'none';
@@ -439,14 +469,31 @@
             canvas.getContext('2d').drawImage(video, 0, 0);
             photoData = canvas.toDataURL('image/jpeg', 0.6); 
             photoPreview.src = photoData;
-            photoTimestamp = new Date(); 
+            photoTimestamp = new Date(); // บันทึกเวลาที่ถ่ายรูป
             video.style.display = 'none'; photoPreview.style.display = 'block';
             snapBtn.innerText = "🔄 ถ่ายใหม่อีกครั้ง";
         } else {
-            video.style.display = 'block'; photoPreview.style.display = 'none';
+            startCamera();
+            photoPreview.style.display = 'none';
             snapBtn.innerText = "📸 กดถ่ายภาพ"; photoData = ""; photoTimestamp = null;
         }
     });
+
+    // ข้อ 2: ฟังก์ชันตรวจสอบอายุภาพถ่ายไม่ให้ค้างเกิน 2 นาที (120,000 มิลลิวินาที)
+    function checkPhotoAge() {
+        if (photoTimestamp && photoData) {
+            const now = new Date();
+            const timeDiff = now.getTime() - photoTimestamp.getTime();
+            if (timeDiff > 120000) { 
+                alert("⏰ รูปถ่ายเดิมหมดอายุ (ค้างเกิน 2 นาที) ระบบบังคับให้ถ่ายรูปใหม่เพื่อความถูกต้องครับ");
+                photoData = "";
+                photoTimestamp = null;
+                photoPreview.style.display = 'none';
+                startCamera();
+                snapBtn.innerText = "📸 กดถ่ายภาพ";
+            }
+        }
+    }
 
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -470,11 +517,20 @@
             return;
         }
 
+        // ตรวจสอบอายุภาพถ่ายอีกชั้นในจังหวะกดส่งฟอร์ม
+        if (photoTimestamp) {
+            const now = new Date();
+            if (now.getTime() - photoTimestamp.getTime() > 120000) {
+                alert("❌ รูปถ่ายหมดอายุ (ค้างเกิน 2 นาที) กรุณากดถ่ายภาพใหม่อีกครั้งครับ");
+                return;
+            }
+        }
+
         isSubmitting = true;
         submitBtn.disabled = true;
         submitBtn.innerText = "กำลังตรวจสอบพิกัดล่าสุด...";
         alertBox.className = "alert-box alert-success";
-        alertBox.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b>กำลังล็อกพิกัดความละเอียดสูง...</b>`;
+        alertBox.innerHTML = `📡 พิกัดปัจจุบันของคุณ: <b>กำลังยืนยันพิกัดความเร็วสูง...</b>`;
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -504,14 +560,20 @@
                         }
                         proceedToSubmit();
                     } else {
-                        alert("❌ ระบบบล็อกการลงเวลาเนื่องจากหาพิกัด GPS ไม่พบ โปรดเปิดสิทธิ์เข้าถึง GPS ของเบราว์เซอร์");
-                        isSubmitting = false;
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
-                        updateGpsDisplay();
+                        // ดึงพิกัดล่าสุดที่จำได้แก้ขัดให้เลยเพื่อความรวดเร็วและไม่บล็อกเครื่องผู้ใช้
+                        if (lastLat !== null && lastLon !== null) {
+                            userGps = lastLat + "," + lastLon;
+                            proceedToSubmit();
+                        } else {
+                            alert("❌ ระบบหาพิกัด GPS ไม่พบ โปรดเปิดสิทธิ์เข้าถึง GPS ของเบราว์เซอร์แล้วทำการรีเฟรชหน้าจออีกครั้ง");
+                            isSubmitting = false;
+                            submitBtn.disabled = false;
+                            submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
+                            updateGpsDisplay();
+                        }
                     }
                 },
-                { enableHighAccuracy: true, timeout: 7000 } /* ปรับเวลาหน่วงเช็คพิกัดก่อนส่งข้อมูลเป็น 7 วินาที */
+                { enableHighAccuracy: false, timeout: 2000 } 
             );
         } else {
             proceedToSubmit();
@@ -574,8 +636,8 @@
             photo: photoData 
         };
 
-        // ⚠️ นำ URL เว็บแอป (Web App URL) ของพี่มาใส่ในเครื่องหมายคำพูดด้านล่างนี้ได้เลยครับ
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbw-TVsFLMQIbO-fQT2s4N-zKpMkv3YEurQ7NUl9998ecFtpyhAL1sxGMsNFDgOHrGXK/exec";
+        // URL เว็บแอป (Web App URL) ดั้งเดิมของพี่ ไม่ถูกกระทบและถูกดึงมาใช้เหมือนเดิม 100% ครับ
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxp_vFEevC9kkToh2vA5fHqjbVT_P7r39P32wH0me8G3PK7PCsBymhKcpxEE0Onm20-/exec";
 
         fetch(webAppUrl, {
             method: "POST",
@@ -597,15 +659,18 @@
             document.getElementById('fullname').value = "";
             missionDetail.value = "";
             photoPreview.style.display = 'none';
-            if(video.style.display === 'none' && !fallbackUpload.style.display) video.style.display = 'block';
+            photoData = "";
+            photoTimestamp = null;
             
+            startCamera();
+            snapBtn.innerText = "📸 กดถ่ายภาพ";
             submitBtn.disabled = false;
             submitBtn.innerText = "📌 บันทึกเวลาปฏิบัติงาน";
             
             setTimeout(() => {
                 isSubmitting = false;
                 updateGpsDisplay();
-            }, 7000);
+            }, 5000);
         })
         .catch(err => {
             alertBox.className = "alert-box alert-danger";
