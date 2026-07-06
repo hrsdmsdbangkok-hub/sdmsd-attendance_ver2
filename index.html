@@ -340,10 +340,30 @@
     const otherPositionGroup = document.getElementById('otherPositionGroup');
     const otherPositionDetail = document.getElementById('otherPositionDetail');
 
+    // ส่วนประมวลผลดึงข้อมูลเดิมที่บันทึกไว้ในเบราว์เซอร์มาแสดงผลอัตโนมัติเมื่อเปิดหน้าเว็บ
     window.addEventListener('load', () => {
         startTrackingLocation(); 
         startCamera();
         setInterval(checkPhotoAge, 1000);
+
+        // ดึงข้อมูลเก่าที่เคยจำไว้มาหยอดในช่องกรอกข้อมูล
+        if(localStorage.getItem('saved_fullname')) {
+            document.getElementById('fullname').value = localStorage.getItem('saved_fullname');
+        }
+        if(localStorage.getItem('saved_position')) {
+            document.getElementById('position').value = localStorage.getItem('saved_position');
+            document.getElementById('position').dispatchEvent(new Event('change'));
+        }
+        if(localStorage.getItem('saved_other_position')) {
+            otherPositionDetail.value = localStorage.getItem('saved_other_position');
+        }
+        if(localStorage.getItem('saved_subDepartment')) {
+            document.getElementById('subDepartment').value = localStorage.getItem('saved_subDepartment');
+        }
+        if(localStorage.getItem('saved_empType')) {
+            document.getElementById('empType').value = localStorage.getItem('saved_empType');
+            document.getElementById('empType').dispatchEvent(new Event('change'));
+        }
     });
 
     document.getElementById('locOfficeBtn').addEventListener('click', function() {
@@ -392,7 +412,6 @@
         document.getElementById('workTimeGroup').style.display = (this.value === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") ? 'block' : 'none';
     });
 
-    // ตรวจสอบการเลือกตำแหน่ง อื่น ๆ เพื่อเปิด/ปิด ช่องพิมพ์ข้อความ
     document.getElementById('position').addEventListener('change', function() {
         if (this.value === "อื่น ๆ") {
             otherPositionGroup.style.display = 'block';
@@ -612,14 +631,23 @@
         const hour = now.getHours();
         const minute = now.getMinutes();
 
+        const inputFullname = document.getElementById('fullname').value;
+        const inputPosition = document.getElementById('position').value;
+        const inputSubDept = document.getElementById('subDepartment').value;
         const empType = document.getElementById('empType').value;
         const actionType = actionTypeHidden.value;
         const workTimeScope = workTimeScopeHidden.value; 
         const locationType = locationTypeHidden.value;
         let workStatus = "ปกติ";
 
-        // ประมวลผลชื่อตำแหน่ง (ถ้าเลือก "อื่น ๆ" ให้นำข้อความที่พิมพ์มาใส่แทน)
-        let selectedPosition = document.getElementById('position').value;
+        // จดจำประวัติข้อมูลลงในเครื่องของผู้ใช้งานทันทีก่อนส่งข้อมูล (ไม่รบกวนหลังบ้าน)
+        localStorage.setItem('saved_fullname', inputFullname);
+        localStorage.setItem('saved_position', inputPosition);
+        localStorage.setItem('saved_other_position', otherPositionDetail.value);
+        localStorage.setItem('saved_subDepartment', inputSubDept);
+        localStorage.setItem('saved_empType', empType);
+
+        let selectedPosition = inputPosition;
         if (selectedPosition === "อื่น ๆ" && otherPositionDetail.value) {
             selectedPosition = `อื่น ๆ (${otherPositionDetail.value})`;
         }
@@ -645,9 +673,9 @@
 
         const payload = {
             timestamp: `${currentDateStr} ${currentTimeStr}`,
-            fullname: document.getElementById('fullname').value,
-            position: selectedPosition, // ส่งข้อมูลตำแหน่งที่อัปเดตเรียบร้อยแล้วไปหลังบ้าน
-            subDepartment: document.getElementById('subDepartment').value,
+            fullname: inputFullname,
+            position: selectedPosition, 
+            subDepartment: inputSubDept,
             empType: empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" ? `บุคคลภายนอกฯ (${workTimeScope})` : empType, 
             actionType: `${actionType} (${locationType})${missionLog}`,
             workStatus: workStatus,
@@ -674,11 +702,8 @@
             
             alert(`บันทึกเวลาสำเร็จ!\nประเภท: ${actionType} (${locationType})\nเวลา: ${currentTimeStr} น.\nผลสรุป: ${workStatus}`);
             
-            document.getElementById('fullname').value = "";
+            // หมายเหตุ: เรายกเลิกเคลียร์ค่า ฟอร์มทั้งหมด เพื่อให้ระบบสามารถคงข้อความจำหน้าจอไว้ให้พนักงานกดในวันถัดไปได้ทันที
             missionDetail.value = "";
-            otherPositionDetail.value = "";
-            otherPositionGroup.style.display = 'none';
-            document.getElementById('position').selectedIndex = 0;
             photoPreview.style.display = 'none';
             photoData = "";
             photoTimestamp = null;
