@@ -217,14 +217,21 @@
                 <option value="ผู้เชี่ยวชาญด้านการบัญชีและพัสดุ">ผู้เชี่ยวชาญด้านการบัญชีและพัสดุ</option>
                 <option value="ผู้เชี่ยวชาญด้านวิเคราะห์นโยบายและแผน">ผู้เชี่ยวชาญด้านวิเคราะห์นโยบายและแผน</option>
                 <option value="เจ้าพนักงานธุรการ">เจ้าพนักงานธุรการ</option>
-                <option value="เจ้าพนักงานโสตทัศนศึกษา">เจ้าพนักงานโสตทัศนศึกษา</option>
+                <option value="เจ้าพนักงานการเงินและบัญชี">เจ้าพนักงานการเงินและบัญชี</option>
+                <option value="เจ้าพนักงานพัสดุ">เจ้าพนักงานพัสดุ</option>
                 <option value="นายช่างเทคนิค">นายช่างเทคนิค</option>
+                <option value="เจ้าพนักงานโสตทัศนศึกษา">เจ้าพนักงานโสตทัศนศึกษา</option>
                 <option value="ผู้ช่วยช่าง (ช่างเทคนิค)">ผู้ช่วยช่าง (ช่างเทคนิค)</option>
                 <option value="พนักงานทั่วไป">พนักงานทั่วไป</option>
                 <option value="พนักงานสถานที่">พนักงานสถานที่</option>
                 <option value="พนักงานขับรถยนต์">พนักงานขับรถยนต์</option>
                 <option value="อื่น ๆ">อื่น ๆ</option>
             </select>
+        </div>
+
+        <div class="form-group" id="otherPositionGroup" style="display:none;">
+            <label style="color: var(--accent);">📝 โปรดระบุตำแหน่งของคุณ *</label>
+            <input type="text" id="otherPositionDetail" placeholder="พิมพ์ระบุตำแหน่งที่นี่">
         </div>
         
         <div class="form-group">
@@ -243,7 +250,7 @@
             <label>ประเภทของพนักงาน</label>
             <select id="empType" required>
                 <option value="ลูกจ้างประจำ">ลูกจ้างประจำ</option>
-                <option value="ลูกจ้างชราว">ลูกจ้างชั่วคราว</option>
+                <option value="ลูกจ้างชั่วคราว">ลูกจ้างชั่วคราว</option>
                 <option value="พนักงานประกันสังคม">พนักงานประกันสังคม</option>
                 <option value="บุคคลภายนอกที่ช่วยปฏิบัติราชการ">บุคคลภายนอกที่ช่วยปฏิบัติราชการ</option>
                 <option value="ข้าราชการ">ข้าราชการ</option>
@@ -330,6 +337,8 @@
     const workTimeScopeHidden = document.getElementById('workTimeScope');
     const missionGroup = document.getElementById('missionGroup');
     const missionDetail = document.getElementById('missionDetail');
+    const otherPositionGroup = document.getElementById('otherPositionGroup');
+    const otherPositionDetail = document.getElementById('otherPositionDetail');
 
     window.addEventListener('load', () => {
         startTrackingLocation(); 
@@ -381,6 +390,18 @@
 
     document.getElementById('empType').addEventListener('change', function() {
         document.getElementById('workTimeGroup').style.display = (this.value === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") ? 'block' : 'none';
+    });
+
+    // ตรวจสอบการเลือกตำแหน่ง อื่น ๆ เพื่อเปิด/ปิด ช่องพิมพ์ข้อความ
+    document.getElementById('position').addEventListener('change', function() {
+        if (this.value === "อื่น ๆ") {
+            otherPositionGroup.style.display = 'block';
+            otherPositionDetail.required = true;
+        } else {
+            otherPositionGroup.style.display = 'none';
+            otherPositionDetail.required = false;
+            otherPositionDetail.value = "";
+        }
     });
 
     function toggleMissionInput() {
@@ -597,10 +618,14 @@
         const locationType = locationTypeHidden.value;
         let workStatus = "ปกติ";
 
-        // แก้ไข: ปรับระบบเงื่อนไขเวลา "นอกสถานที่" ตามข้อตกลงล่าสุด
+        // ประมวลผลชื่อตำแหน่ง (ถ้าเลือก "อื่น ๆ" ให้นำข้อความที่พิมพ์มาใส่แทน)
+        let selectedPosition = document.getElementById('position').value;
+        if (selectedPosition === "อื่น ๆ" && otherPositionDetail.value) {
+            selectedPosition = `อื่น ๆ (${otherPositionDetail.value})`;
+        }
+
         if (locationType === "นอกสถานที่") {
             if (actionType === "เข้างาน" && (hour > 10 || (hour === 10 && minute > 0))) workStatus = "สาย";
-            // บล็อกเวลาเลิกงานนอกสถานที่: ต่ำกว่า 14:30 น. (บ่ายสองครึ่ง) ถือว่า ขาดราชการ สำหรับพนักงานทุกกลุ่มทันที
             if (actionType === "เลิกงาน" && (hour < 14 || (hour === 14 && minute < 30))) workStatus = "ขาดราชการ";
         } else {
             if (actionType === "เข้างาน") {
@@ -621,7 +646,7 @@
         const payload = {
             timestamp: `${currentDateStr} ${currentTimeStr}`,
             fullname: document.getElementById('fullname').value,
-            position: document.getElementById('position').value,
+            position: selectedPosition, // ส่งข้อมูลตำแหน่งที่อัปเดตเรียบร้อยแล้วไปหลังบ้าน
             subDepartment: document.getElementById('subDepartment').value,
             empType: empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" ? `บุคคลภายนอกฯ (${workTimeScope})` : empType, 
             actionType: `${actionType} (${locationType})${missionLog}`,
@@ -630,7 +655,6 @@
             photo: photoData 
         };
 
-        // ตรวจสอบ Web App URL หลังบ้านของพี่ก่อนกดยืนยันเซฟฝั่งหน้าบ้านเสร็จเรียบร้อยครับ
         const webAppUrl = "https://script.google.com/macros/s/AKfycbxp_vFEevC9kkToh2vA5fHqjbVT_P7r39P32wH0me8G3PK7PCsBymhKcpxEE0Onm20-/exec";
 
         fetch(webAppUrl, {
@@ -652,6 +676,9 @@
             
             document.getElementById('fullname').value = "";
             missionDetail.value = "";
+            otherPositionDetail.value = "";
+            otherPositionGroup.style.display = 'none';
+            document.getElementById('position').selectedIndex = 0;
             photoPreview.style.display = 'none';
             photoData = "";
             photoTimestamp = null;
