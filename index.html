@@ -18,6 +18,9 @@
             --danger-border: #ffcdd2;
             --gray-bg: #f1f3f5;
             --text-main: #212529;
+            --ot-primary: #d97706;
+            --ot-bg: #fffbeb;
+            --ot-border: #fde68a;
         }
 
         body { 
@@ -110,12 +113,36 @@
             font-weight: 600;
             border-radius: 10px;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
 
         .btn-segment.active {
             background: #ffffff;
             color: var(--primary);
-            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.12);
+            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.14);
+            font-weight: 700;
+        }
+
+        .time-group-label {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .ot-control {
+            background: var(--ot-bg);
+            border: 1.5px solid var(--ot-border);
+        }
+
+        .btn-segment-ot {
+            color: #b45309;
+        }
+
+        .btn-segment-ot.active {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.28);
             font-weight: 700;
         }
 
@@ -268,10 +295,19 @@
 
         <div class="form-group">
             <label>ประเภทการลงเวลา</label>
-            <div class="segmented-control">
+            
+            <span class="time-group-label" style="color: var(--accent);">● เวลาปฏิบัติงานปกติ</span>
+            <div class="segmented-control" style="margin-bottom: 12px;">
                 <button type="button" id="actInBtn" class="btn-segment active">☀️ เข้างาน</button>
                 <button type="button" id="actOutBtn" class="btn-segment">🌙 เลิกงาน</button>
             </div>
+
+            <span class="time-group-label" style="color: var(--ot-primary);">● ปฏิบัติงานนอกเวลา (OT)</span>
+            <div class="segmented-control ot-control">
+                <button type="button" id="actOtInBtn" class="btn-segment btn-segment-ot">🕒 เข้า OT</button>
+                <button type="button" id="actOtOutBtn" class="btn-segment btn-segment-ot">🏁 ออก OT</button>
+            </div>
+
             <input type="hidden" id="actionType" value="เข้างาน">
         </div>
 
@@ -293,12 +329,8 @@
             <label>📸 ถ่ายภาพเซลฟี่กับสถานที่ทำงาน</label>
             <video id="video" autoplay playsinline></video>
             <img id="photoPreview" style="display:none;">
+            <p id="cameraErrorMsg" style="color:#d32f2f; font-size:13px; font-weight:600; display:none; margin:10px 0;">⚠️ ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตสิทธิ์เข้าถึงกล้องบนเบราว์เซอร์เพื่อถ่ายเซลฟี่</p>
             <button type="button" class="btn-snap" id="snapBtn">📸 กดถ่ายภาพ</button>
-            
-            <div id="fallbackUpload" style="margin-top:10px; font-size:12px; display:none;">
-                <p style="color:red; margin:5px 0;">หากกล้องใช้งานไม่ได้ ให้เลือกไฟล์รูปภาพแทน:</p>
-                <input type="file" id="fileInput" accept="image/*">
-            </div>
         </div>
 
         <button type="submit" id="submitBtn" class="btn-submit">📌 บันทึกเวลาปฏิบัติงาน</button>
@@ -329,8 +361,7 @@
     const video = document.getElementById('video');
     const photoPreview = document.getElementById('photoPreview');
     const snapBtn = document.getElementById('snapBtn');
-    const fallbackUpload = document.getElementById('fallbackUpload');
-    const fileInput = document.getElementById('fileInput');
+    const cameraErrorMsg = document.getElementById('cameraErrorMsg');
     
     const locationTypeHidden = document.getElementById('locationType');
     const actionTypeHidden = document.getElementById('actionType');
@@ -341,6 +372,7 @@
     const otherPositionDetail = document.getElementById('otherPositionDetail');
 
     window.addEventListener('load', () => {
+        resetActionTypeToDefault();
         startTrackingLocation(); 
         startCamera();
         setInterval(checkPhotoAge, 1000);
@@ -364,7 +396,22 @@
         }
     });
 
-    // แก้ไขระบบปุ่มกดฝั่ง iOS iPhone: บังคับล้างค่าเก่าและผูกค่าใหม่ให้แม่นยำ 100%
+    function clearActionActive() {
+        document.getElementById('actInBtn').classList.remove('active');
+        document.getElementById('actOutBtn').classList.remove('active');
+        document.getElementById('actOtInBtn').classList.remove('active');
+        document.getElementById('actOtOutBtn').classList.remove('active');
+    }
+
+    function resetActionTypeToDefault() {
+        const actInBtn = document.getElementById('actInBtn');
+        if (actInBtn) {
+            clearActionActive();
+            actInBtn.classList.add('active');
+            actionTypeHidden.value = "เข้างาน";
+        }
+    }
+
     document.getElementById('locOfficeBtn').addEventListener('click', function() {
         this.classList.add('active');
         document.getElementById('locOutsideBtn').classList.remove('active');
@@ -381,17 +428,35 @@
         updateGpsDisplay(); 
     });
 
-    document.getElementById('actInBtn').addEventListener('click', function() {
+    document.getElementById('actInBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        clearActionActive();
         this.classList.add('active');
-        document.getElementById('actOutBtn').classList.remove('active');
         actionTypeHidden.value = "เข้างาน";
         toggleMissionInput();
     });
 
-    document.getElementById('actOutBtn').addEventListener('click', function() {
+    document.getElementById('actOutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        clearActionActive();
         this.classList.add('active');
-        document.getElementById('actInBtn').classList.remove('active');
         actionTypeHidden.value = "เลิกงาน";
+        toggleMissionInput();
+    });
+
+    document.getElementById('actOtInBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        clearActionActive();
+        this.classList.add('active');
+        actionTypeHidden.value = "เข้า OT";
+        toggleMissionInput();
+    });
+
+    document.getElementById('actOtOutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        clearActionActive();
+        this.classList.add('active');
+        actionTypeHidden.value = "ออก OT";
         toggleMissionInput();
     });
 
@@ -483,15 +548,15 @@
                     localStream = stream;
                     video.srcObject = stream; 
                     video.style.display = 'block';
-                    fallbackUpload.style.display = 'none'; 
+                    cameraErrorMsg.style.display = 'none';
                 })
                 .catch(function(err) {
                     video.style.display = 'none';
-                    fallbackUpload.style.display = 'block'; 
+                    cameraErrorMsg.style.display = 'block';
                 });
         } else {
             video.style.display = 'none';
-            fallbackUpload.style.display = 'block';
+            cameraErrorMsg.style.display = 'block';
         }
     }
 
@@ -528,25 +593,11 @@
         }
     }
 
-    fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                photoData = event.target.result;
-                photoPreview.src = photoData;
-                photoPreview.style.display = 'block';
-                photoTimestamp = new Date();
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
     document.getElementById('mainForm').addEventListener('submit', (e) => {
         e.preventDefault();
         
         if (!photoData) {
-            alert("กรุณาถ่ายภาพหรือเลือกไฟล์รูปภาพก่อนบันทึกเวลาครับ");
+            alert("กรุณาถ่ายภาพเซลฟี่ก่อนบันทึกเวลาครับ");
             return;
         }
 
@@ -631,7 +682,6 @@
         return R * c;
     }
 
-    // ฟังก์ชันเสริมพิเศษ ส่งข้อมูลซ้ำอัตโนมัติ (Retry Loop) เพื่อแก้ปัญหารถบันทึกข้อมูลไม่ติดในช่วงคอขวดพร้อมกัน 14 คน
     function fetchWithRetry(url, options, retries = 3, delay = 1500) {
         return fetch(url, options)
         .then(res => {
@@ -645,6 +695,27 @@
             }
             throw err;
         });
+    }
+
+    function evaluateWorkStatus(checkAction, locationType, empType, workTimeScope, hour, minute) {
+        let status = "ปกติ";
+        if (locationType === "นอกสถานที่") {
+            if (checkAction === "เข้างาน" && (hour > 10 || (hour === 10 && minute > 0))) status = "สาย";
+            if (checkAction === "เลิกงาน" && (hour < 14 || (hour === 14 && minute < 30))) status = "ขาดราชการ";
+        } else {
+            if (checkAction === "เข้างาน") {
+                if ((empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" || empType === "ข้าราชการ") && (hour > 8 || (hour === 8 && minute > 0))) status = "สาย";
+                else if (empType !== "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" && empType !== "ข้าราชการ" && (hour > 7 || (hour === 7 && minute > 0))) status = "สาย";
+            } else if (checkAction === "เลิกงาน") {
+                if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") {
+                    if (workTimeScope === "08:00-17:00" && hour < 17) status = "ขาดราชการ";
+                    else if (workTimeScope !== "08:00-17:00" && hour < 16) status = "ขาดราชการ";
+                } else if (hour < 16) {
+                    status = "ขาดราชการ";
+                }
+            }
+        }
+        return status;
     }
 
     function proceedToSubmit() {
@@ -662,7 +733,6 @@
         const actionType = actionTypeHidden.value;
         const workTimeScope = workTimeScopeHidden.value; 
         const locationType = locationTypeHidden.value;
-        let workStatus = "ปกติ";
 
         localStorage.setItem('saved_fullname', inputFullname);
         localStorage.setItem('saved_position', inputPosition);
@@ -670,64 +740,116 @@
         localStorage.setItem('saved_subDepartment', inputSubDept);
         localStorage.setItem('saved_empType', empType);
 
+        // คีย์ตรวจสอบว่า "วันนี้คนชื่อนี้ได้กดลงเข้างานปกติไว้หรือไม่"
+        const normalCheckInKey = `normal_checkin_${currentDateStr}_${inputFullname.trim()}`;
+        const hasCheckedInToday = localStorage.getItem(normalCheckInKey) === "true";
+
         let selectedPosition = inputPosition;
         if (selectedPosition === "อื่น ๆ" && otherPositionDetail.value) {
             selectedPosition = `อื่น ๆ (${otherPositionDetail.value})`;
         }
 
-        if (locationType === "นอกสถานที่") {
-            if (actionType === "เข้างาน" && (hour > 10 || (hour === 10 && minute > 0))) workStatus = "สาย";
-            if (actionType === "เลิกงาน" && (hour < 14 || (hour === 14 && minute < 30))) workStatus = "ขาดราชการ";
-        } else {
-            if (actionType === "เข้างาน") {
-                if ((empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" || empType === "ข้าราชการ") && (hour > 8 || (hour === 8 && minute > 0))) workStatus = "สาย";
-                else if (empType !== "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" && empType !== "ข้าราชการ" && (hour > 7 || (hour === 7 && minute > 0))) workStatus = "สาย";
-            } else if (actionType === "เลิกงาน") {
-                if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ") {
-                    if (workTimeScope === "08:00-17:00" && hour < 17) workStatus = "ขาดราชการ";
-                    else if (workTimeScope !== "08:00-17:00" && hour < 16) workStatus = "ขาดราชการ";
-                } else if (hour < 16) {
-                    workStatus = "ขาดราชการ";
-                }
-            }
+        const formattedEmpType = empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" ? `บุคคลภายนอกฯ (${workTimeScope})` : empType;
+        const missionLog = missionDetail.value ? ` | ภารกิจ: ${missionDetail.value}` : '';
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxp_vFEevC9kkToh2vA5fHqjbVT_P7r39P32wH0me8G3PK7PCsBymhKcpxEE0Onm20-/exec";
+
+        let workStatus = "ปกติ";
+        if (actionType === "เข้างาน" || actionType === "เลิกงาน") {
+            workStatus = evaluateWorkStatus(actionType, locationType, empType, workTimeScope, hour, minute);
         }
 
-        const missionLog = missionDetail.value ? ` | ภารกิจ: ${missionDetail.value}` : '';
-
-        const payload = {
+        const primaryPayload = {
             timestamp: `${currentDateStr} ${currentTimeStr}`,
             fullname: inputFullname,
             position: selectedPosition, 
             subDepartment: inputSubDept,
-            empType: empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" ? `บุคคลภายนอกฯ (${workTimeScope})` : empType, 
+            empType: formattedEmpType, 
             actionType: `${actionType} (${locationType})${missionLog}`,
             workStatus: workStatus,
             gps: userGps,
             photo: photoData 
         };
 
-        // ลิงก์เดิมของพี่ใช้งานได้ปกติ ปล่อยไว้ที่เดิมครับ
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbyhbJGKwB4RJVetT-1B47Zv927f_2J8MSR3kZK7Qplj2G8_dtSse3cdJW6VAZBY9_Su/exec";
+        let submitPromise;
+        let autoOutTimeDisplay = currentTimeStr;
+        let didAutoCheckOut = false;
 
-        // เรียกใช้ระบบ Retry ยิงข้อมูลฝ่าคอขวด 3 รอบเพื่อป้องกันข้อมูลหลุดจากกลุ่ม 14 คน
-        fetchWithRetry(webAppUrl, {
-            method: "POST",
-            mode: "cors", 
-            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-            body: JSON.stringify(payload)
-        })
+        // ทำการลงเวลาออกปกติให้อัตโนมัติ เฉพาะเมื่อกด "เข้า OT" และ "วันนี้คนๆ นี้มีการลงเข้างานปกติไว้แล้วเท่านั้น"
+        if (actionType === "เข้า OT" && hasCheckedInToday) {
+            didAutoCheckOut = true;
+            let requiredHour = 16;
+            let requiredMinute = 0;
+
+            if (locationType === "นอกสถานที่") {
+                requiredHour = 14;
+                requiredMinute = 30;
+            } else if (empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" && workTimeScope === "08:00-17:00") {
+                requiredHour = 17;
+                requiredMinute = 0;
+            }
+
+            if (hour < requiredHour || (hour === requiredHour && minute < requiredMinute)) {
+                const padH = String(requiredHour).padStart(2, '0');
+                const padM = String(requiredMinute).padStart(2, '0');
+                autoOutTimeDisplay = `${padH}:${padM}:00`;
+            }
+
+            const autoOutPayload = {
+                timestamp: `${currentDateStr} ${autoOutTimeDisplay}`,
+                fullname: inputFullname,
+                position: selectedPosition, 
+                subDepartment: inputSubDept,
+                empType: formattedEmpType, 
+                actionType: `เลิกงาน (${locationType}) (ลงเวลาออกอัตโนมัติจากระบบเข้า OT)${missionLog}`,
+                workStatus: "ปกติ",
+                gps: userGps,
+                photo: photoData 
+            };
+
+            submitPromise = fetchWithRetry(webAppUrl, {
+                method: "POST",
+                mode: "cors", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                body: JSON.stringify(autoOutPayload)
+            }).then(() => {
+                return fetchWithRetry(webAppUrl, {
+                    method: "POST",
+                    mode: "cors", 
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                    body: JSON.stringify(primaryPayload)
+                });
+            });
+        } else {
+            submitPromise = fetchWithRetry(webAppUrl, {
+                method: "POST",
+                mode: "cors", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                body: JSON.stringify(primaryPayload)
+            });
+        }
+
+        submitPromise
         .then(response => {
+            // หากเป็นการลง "เข้างาน" ปกติสำเร็จ ให้บันทึกประวัติไว้ว่าวันนี้คนนี้ลงเข้างานปกติแล้ว
+            if (actionType === "เข้างาน") {
+                localStorage.setItem(normalCheckInKey, "true");
+            }
+
             alertBox.classList.remove('alert-success', 'alert-danger');
             if (workStatus === "สาย" || workStatus === "ขาดราชการ") {
                 alertBox.classList.add('alert-danger');
             } else {
                 alertBox.classList.add('alert-success');
             }
-            alertBox.innerHTML = `🔔 บันทึกสำเร็จเรียบร้อย!<br>คุณได้ลงเวลา ${actionType} (${locationType})<br>เวลา: <b>${currentTimeStr} น.</b><br>สถานะระบบสรุป: <span style="text-decoration:underline; font-weight:700;">${workStatus}</span>`;
+
+            if (didAutoCheckOut) {
+                alertBox.innerHTML = `🔔 บันทึกสำเร็จเรียบร้อย!<br>ระบบได้ลง <b>เลิกงานปกติ (${autoOutTimeDisplay} น.)</b> ให้อัตโนมัติ และบันทึก <b>เข้า OT</b> (${locationType}) แล้ว<br>เวลาเข้า OT: <b>${currentTimeStr} น.</b><br>สถานะระบบสรุป: <span style="text-decoration:underline; font-weight:700;">${workStatus}</span>`;
+                alert(`บันทึกเวลาสำเร็จ!\n- เลิกงานปกติ (อัตโนมัติ): ${autoOutTimeDisplay} น. (สถานะ: ปกติ)\n- เข้า OT: ${currentTimeStr} น.`);
+            } else {
+                alertBox.innerHTML = `🔔 บันทึกสำเร็จเรียบร้อย!<br>คุณได้ลงเวลา ${actionType} (${locationType})<br>เวลา: <b>${currentTimeStr} น.</b><br>สถานะระบบสรุป: <span style="text-decoration:underline; font-weight:700;">${workStatus}</span>`;
+                alert(`บันทึกเวลาสำเร็จ!\nประเภท: ${actionType} (${locationType})\nเวลา: ${currentTimeStr} น.\nผลสรุป: ${workStatus}`);
+            }
             
-            alert(`บันทึกเวลาสำเร็จ!\nประเภท: ${actionType} (${locationType})\nเวลา: ${currentTimeStr} น.\nผลสรุป: ${workStatus}`);
-            
-            // ล้างค่าข้อมูลภาพเพื่อความปลอดภัย
             missionDetail.value = "";
             photoPreview.style.display = 'none';
             photoData = "";
