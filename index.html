@@ -106,7 +106,7 @@
 
         .btn-segment {
             flex: 1;
-            padding: 12px 10px;
+            padding: 12px 8px;
             border: none;
             background: transparent;
             color: #6c757d;
@@ -120,7 +120,7 @@
         .btn-segment.active {
             background: #ffffff;
             color: var(--primary);
-            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.14);
+            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.12);
             font-weight: 700;
         }
 
@@ -397,7 +397,7 @@
             <label>📸 ถ่ายภาพเซลฟี่กับสถานที่ทำงาน</label>
             <video id="video" autoplay playsinline></video>
             <img id="photoPreview" style="display:none;">
-            <p id="cameraErrorMsg" style="color:#d32f2f; font-size:13px; font-weight:600; display:none; margin:10px 0;">⚠️ ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตสิทธิ์เข้าถึงกล้องบนเบราว์เซอร์เพื่อถ่ายเซลฟี่</p>
+            <p id="cameraErrorMsg" style="color:#d32f2f; font-size:13px; font-weight:600; display:none; margin:10px 0;">⚠️ ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตสิทธิ์เข้าถึงกล้องบนเบราว์เซอร์</p>
             <button type="button" class="btn-snap" id="snapBtn">📸 กดถ่ายภาพ</button>
         </div>
 
@@ -453,9 +453,7 @@
                         <th>หมายเหตุ</th>
                     </tr>
                 </thead>
-                <tbody id="historyTableBody">
-                    <!-- ข้อมูลจะถูกโหลดมาแสดงที่นี่ -->
-                </tbody>
+                <tbody id="historyTableBody"></tbody>
             </table>
         </div>
     </div>
@@ -466,7 +464,6 @@
 </div>
 
 <script>
-    // 📌 กำหนดพิกัดหลัก "สำนักการแพทย์ อาคารชั่วคราว"
     const TARGET_LAT = 13.767288568265224; 
     const TARGET_LON = 100.47250332179641;
     const RADIUS_LIMIT = 500; 
@@ -681,7 +678,6 @@
         missionDetail.required = isOutside;
     }
 
-    // --- 🛠️ ฟังก์ชันระบุชื่อสถานที่ตามพิกัดรัศมีรอบสำนักงาน ---
     function getPlaceNameByCoordinates(lat, lon, dist) {
         const watLat = 13.766800;
         const watLon = 100.471200;
@@ -725,10 +721,9 @@
         }
     }
 
-    // --- 📌 ปรับปรุงใหม่: ใช้ getCurrentPosition แบบไม่บล็อกปุ่มกด ---
     function startTrackingLocation() {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
+            navigator.geolocation.watchPosition(
                 function(pos) { 
                     lastLat = pos.coords.latitude;
                     lastLon = pos.coords.longitude;
@@ -741,7 +736,7 @@
                         alertBox.innerHTML = `📡 พิกัดล้มเหลว: <b>โปรดอนุญาตสิทธิ์เข้าถึงพิกัด GPS บนเบราว์เซอร์</b>`;
                     }
                 },
-                { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+                { enableHighAccuracy: false, timeout: 5000, maximumAge: 30000 }
             );
         } else {
             alertBox.className = "alert-box alert-danger";
@@ -749,33 +744,27 @@
         }
     }
 
-    // --- 📌 ปรับปรุงใหม่: เปิดกล้องแบบปลอดภัย ป้องกันจอดำและบล็อกสคริปต์ ---
+    // 📌 ใช้ฟังก์ชันเปิดกล้องแบบดั้งเดิมที่เสถียรที่สุด (จากโค้ดเดิม index_2.txt)
     function startCamera() {
-        try {
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+        }
 
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-                    .then(function(stream) { 
-                        localStream = stream;
-                        video.srcObject = stream; 
-                        video.style.display = 'block';
-                        if(cameraErrorMsg) cameraErrorMsg.style.display = 'none';
-                    })
-                    .catch(function(err) {
-                        console.warn("Camera access warning:", err);
-                        video.style.display = 'none';
-                        if(cameraErrorMsg) cameraErrorMsg.style.display = 'block';
-                    });
-            } else {
-                video.style.display = 'none';
-                if(cameraErrorMsg) cameraErrorMsg.style.display = 'block';
-            }
-        } catch (e) {
-            console.error("Camera init error:", e);
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+                .then(function(stream) { 
+                    localStream = stream;
+                    video.srcObject = stream; 
+                    video.style.display = 'block';
+                    cameraErrorMsg.style.display = 'none';
+                })
+                .catch(function(err) {
+                    video.style.display = 'none';
+                    cameraErrorMsg.style.display = 'block';
+                });
+        } else {
+            video.style.display = 'none';
+            cameraErrorMsg.style.display = 'block';
         }
     }
 
@@ -902,7 +891,7 @@
                         }
                     }
                 },
-                { enableHighAccuracy: true, timeout: 5000 } 
+                { enableHighAccuracy: false, timeout: 2000 } 
             );
         } else {
             proceedToSubmit();
