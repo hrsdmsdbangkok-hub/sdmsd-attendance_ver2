@@ -466,7 +466,7 @@
 </div>
 
 <script>
-    // 📌 กำหนดพิกัดหลัก "สำนักการแพทย์ อาคารชั่วคราว" ตามที่พี่ระบุเป๊ะๆ
+    // 📌 กำหนดพิกัดหลัก "สำนักการแพทย์ อาคารชั่วคราว"
     const TARGET_LAT = 13.767288568265224; 
     const TARGET_LON = 100.47250332179641;
     const RADIUS_LIMIT = 500; 
@@ -681,15 +681,12 @@
         missionDetail.required = isOutside;
     }
 
-    // --- 🛠️ ฟังก์ชันระบุชื่อสถานที่ตามพิกัดรัศมีรอบสำนักงาน (ตามที่พี่ต้องการ) ---
+    // --- 🛠️ ฟังก์ชันระบุชื่อสถานที่ตามพิกัดรัศมีรอบสำนักงาน ---
     function getPlaceNameByCoordinates(lat, lon, dist) {
-        // พิกัดอ้างอิงสถานที่ใกล้เคียง (เทียบรัศมีใกล้จุดไหนที่สุดในรัศมี 500 เมตร)
-        // 1. วัดศรีสุดารามวรวิหาร (พิกัดตัวอย่างโซนวัด)
         const watLat = 13.766800;
         const watLon = 100.471200;
         const distToWat = haversineDistance(lat, lon, watLat, watLon);
 
-        // 2. มูลนิธิพระอภิธรรมวัดศรีสุดาราม
         const foundationLat = 13.765900;
         const foundationLon = 100.470000;
         const distToFoundation = haversineDistance(lat, lon, foundationLat, foundationLon);
@@ -728,9 +725,10 @@
         }
     }
 
+    // --- 📌 ปรับปรุงใหม่: ใช้ getCurrentPosition แบบไม่บล็อกปุ่มกด ---
     function startTrackingLocation() {
         if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(
+            navigator.geolocation.getCurrentPosition(
                 function(pos) { 
                     lastLat = pos.coords.latitude;
                     lastLon = pos.coords.longitude;
@@ -743,7 +741,7 @@
                         alertBox.innerHTML = `📡 พิกัดล้มเหลว: <b>โปรดอนุญาตสิทธิ์เข้าถึงพิกัด GPS บนเบราว์เซอร์</b>`;
                     }
                 },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
+                { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
             );
         } else {
             alertBox.className = "alert-box alert-danger";
@@ -751,26 +749,33 @@
         }
     }
 
+    // --- 📌 ปรับปรุงใหม่: เปิดกล้องแบบปลอดภัย ป้องกันจอดำและบล็อกสคริปต์ ---
     function startCamera() {
-        if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
-        }
+        try {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
 
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-                .then(function(stream) { 
-                    localStream = stream;
-                    video.srcObject = stream; 
-                    video.style.display = 'block';
-                    cameraErrorMsg.style.display = 'none';
-                })
-                .catch(function(err) {
-                    video.style.display = 'none';
-                    cameraErrorMsg.style.display = 'block';
-                });
-        } else {
-            video.style.display = 'none';
-            cameraErrorMsg.style.display = 'block';
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+                    .then(function(stream) { 
+                        localStream = stream;
+                        video.srcObject = stream; 
+                        video.style.display = 'block';
+                        if(cameraErrorMsg) cameraErrorMsg.style.display = 'none';
+                    })
+                    .catch(function(err) {
+                        console.warn("Camera access warning:", err);
+                        video.style.display = 'none';
+                        if(cameraErrorMsg) cameraErrorMsg.style.display = 'block';
+                    });
+            } else {
+                video.style.display = 'none';
+                if(cameraErrorMsg) cameraErrorMsg.style.display = 'block';
+            }
+        } catch (e) {
+            console.error("Camera init error:", e);
         }
     }
 
