@@ -31,6 +31,7 @@
             color: var(--text-main); 
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
         }
         
@@ -203,6 +204,73 @@
         .alert-success { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); }
         .alert-danger { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger-border); }
 
+        /* --- ส่วนตารางประวัติการลงเวลาเพิ่มเติม --- */
+        .history-card {
+            max-width: 480px;
+            width: 100%;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 24px 20px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(27, 94, 32, 0.06);
+            border: 1px solid rgba(165, 214, 167, 0.4);
+            box-sizing: border-box;
+        }
+
+        .history-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .history-table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--primary-border);
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: center;
+            background-color: #fafdfa;
+        }
+
+        .history-table th {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 8px;
+            font-weight: 600;
+        }
+
+        .history-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e0e0e0;
+            color: var(--text-main);
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .btn-search-history {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.25);
+            margin-top: 10px;
+        }
+
         .credit-text {
             font-size: 11px;
             color: #888888;
@@ -219,7 +287,7 @@
 <div class="card">
     <div class="text-center">
         <img class="logo" id="officeLogo" alt="ตราสำนักงานเลขานุการ" src="15.Logoสำนักงานเลขานุการสำนักการแพทย์.jpg">
-        <h2>ระบบลงเวลาปฏิบัติงาน</h2>
+        <h2 id="displayUserNameHeader">ระบบลงเวลาปฏิบัติงาน</h2>
         <p class="subtitle">สำนักงานเลขานุการ สำนักการแพทย์</p>
     </div>
 
@@ -337,15 +405,70 @@
     </form>
 
     <div id="alertBox" class="alert-box alert-success">📡 ระบบกำลังค้นหาสัญญาณดาวเทียม GPS...</div>
+</div>
+
+<!-- --- ส่วนค้นหาและแสดงประวัติการลงเวลา --- -->
+<div class="history-card">
+    <div class="history-title">🔍 ค้นหาข้อมูลประวัติการลงเวลา</div>
     
-    <div class="credit-text">
-        จัดทำโดย กลุ่มงานการเจ้าหน้าที่<br>สำนักงานเลขานุการ สำนักการแพทย์
+    <div class="form-group" style="margin-bottom: 12px;">
+        <label>เดือน</label>
+        <select id="searchMonth">
+            <option value="01">มกราคม</option>
+            <option value="02">กุมภาพันธ์</option>
+            <option value="03">มีนาคม</option>
+            <option value="04">เมษายน</option>
+            <option value="05">พฤษภาคม</option>
+            <option value="06">มิถุนายน</option>
+            <option value="07">กรกฎาคม</option>
+            <option value="08">สิงหาคม</option>
+            <option value="09">กันยายน</option>
+            <option value="10">ตุลาคม</option>
+            <option value="11" selected>พฤศจิกายน</option>
+            <option value="12">ธันวาคม</option>
+        </select>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 16px;">
+        <label>ปี</label>
+        <select id="searchYear">
+            <option value="2026" selected>2026 (2569)</option>
+            <option value="2025">2025 (2568)</option>
+            <option value="2024">2024 (2567)</option>
+        </select>
+    </div>
+
+    <button type="button" id="searchHistoryBtn" class="btn-search-history">🔎 ค้นหาข้อมูล</button>
+
+    <div id="historyResultContainer" style="display:none; margin-top: 20px;">
+        <div id="historyTableTitle" style="text-align: center; font-weight: 700; color: var(--primary); margin-bottom: 10px; font-size: 14px;"></div>
+        <div class="history-table-container">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>วันที่</th>
+                        <th>การทำงาน</th>
+                        <th>เข้า</th>
+                        <th>ออก</th>
+                        <th>หมายเหตุ</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <!-- ข้อมูลจะถูกโหลดมาแสดงที่นี่ -->
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
+<div class="credit-text">
+    จัดทำโดย กลุ่มงานการเจ้าหน้าที่<br>สำนักงานเลขานุการ สำนักการแพทย์
+</div>
+
 <script>
-    const TARGET_LAT = 13.766324; 
-    const TARGET_LON = 100.470656;
+    // 📌 กำหนดพิกัดหลัก "สำนักการแพทย์ อาคารชั่วคราว" ตามที่พี่ระบุเป๊ะๆ
+    const TARGET_LAT = 13.767288568265224; 
+    const TARGET_LON = 100.47250332179641;
     const RADIUS_LIMIT = 500; 
 
     let userGps = "ไม่พบพิกัด";
@@ -370,6 +493,9 @@
     const missionDetail = document.getElementById('missionDetail');
     const otherPositionGroup = document.getElementById('otherPositionGroup');
     const otherPositionDetail = document.getElementById('otherPositionDetail');
+    const displayUserNameHeader = document.getElementById('displayUserNameHeader');
+
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbxp_vFEevC9kkToh2vA5fHqjbVT_P7r39P32wH0me8G3PK7PCsBymhKcpxEE0Onm20-/exec";
 
     window.addEventListener('load', () => {
         resetActionTypeToDefault();
@@ -378,7 +504,23 @@
         setInterval(checkPhotoAge, 1000);
 
         if(localStorage.getItem('saved_fullname')) {
-            document.getElementById('fullname').value = localStorage.getItem('saved_fullname');
+            const savedName = localStorage.getItem('saved_fullname');
+            document.getElementById('fullname').value = savedName;
+            displayUserNameHeader.innerText = savedName;
+
+            const todayStr = new Date().toLocaleDateString('th-TH');
+            const hasCheckedInNormal = localStorage.getItem(`normal_checkin_${todayStr}_${savedName.trim()}`) === "true";
+            const hasCheckedInOt = localStorage.getItem(`ot_checkin_${todayStr}_${savedName.trim()}`) === "true";
+
+            if (hasCheckedInOt) {
+                clearActionActive();
+                document.getElementById('actOtOutBtn').classList.add('active');
+                actionTypeHidden.value = "ออก OT";
+            } else if (hasCheckedInNormal) {
+                clearActionActive();
+                document.getElementById('actOutBtn').classList.add('active');
+                actionTypeHidden.value = "เลิกงาน";
+            }
         }
         if(localStorage.getItem('saved_position')) {
             document.getElementById('position').value = localStorage.getItem('saved_position');
@@ -394,6 +536,28 @@
             document.getElementById('empType').value = localStorage.getItem('saved_empType');
             document.getElementById('empType').dispatchEvent(new Event('change'));
         }
+
+        const now = new Date();
+        const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const currentYear = String(now.getFullYear());
+        
+        const monthSelect = document.getElementById('searchMonth');
+        if (monthSelect) monthSelect.value = currentMonth;
+        
+        const yearSelect = document.getElementById('searchYear');
+        if (yearSelect) {
+            for (let i = 0; i < yearSelect.options.length; i++) {
+                if (yearSelect.options[i].value === currentYear) {
+                    yearSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    });
+
+    document.getElementById('fullname').addEventListener('input', function() {
+        const val = this.value.trim();
+        displayUserNameHeader.innerText = val ? val : "ระบบลงเวลาปฏิบัติงาน";
     });
 
     function clearActionActive() {
@@ -430,6 +594,18 @@
 
     document.getElementById('actInBtn').addEventListener('click', function(e) {
         e.preventDefault();
+        const currentName = document.getElementById('fullname').value.trim();
+        const todayStr = new Date().toLocaleDateString('th-TH');
+        
+        if (currentName && localStorage.getItem(`normal_checkin_${todayStr}_${currentName}`) === "true") {
+            alert("⚠️ วันนี้คุณได้ลงเวลา 'เข้างาน' ไปเรียบร้อยแล้วครับ ระบบจะสลับไปที่ 'เลิกงาน' ให้อัตโนมัติ");
+            clearActionActive();
+            document.getElementById('actOutBtn').classList.add('active');
+            actionTypeHidden.value = "เลิกงาน";
+            toggleMissionInput();
+            return;
+        }
+
         clearActionActive();
         this.classList.add('active');
         actionTypeHidden.value = "เข้างาน";
@@ -446,6 +622,18 @@
 
     document.getElementById('actOtInBtn').addEventListener('click', function(e) {
         e.preventDefault();
+        const currentName = document.getElementById('fullname').value.trim();
+        const todayStr = new Date().toLocaleDateString('th-TH');
+
+        if (currentName && localStorage.getItem(`ot_checkin_${todayStr}_${currentName}`) === "true") {
+            alert("⚠️ วันนี้คุณได้ลงเวลา 'เข้า OT' ไปเรียบร้อยแล้วครับ ระบบจะสลับไปที่ 'ออก OT' ให้อัตโนมัติ");
+            clearActionActive();
+            document.getElementById('actOtOutBtn').classList.add('active');
+            actionTypeHidden.value = "ออก OT";
+            toggleMissionInput();
+            return;
+        }
+
         clearActionActive();
         this.classList.add('active');
         actionTypeHidden.value = "เข้า OT";
@@ -493,20 +681,46 @@
         missionDetail.required = isOutside;
     }
 
+    // --- 🛠️ ฟังก์ชันระบุชื่อสถานที่ตามพิกัดรัศมีรอบสำนักงาน (ตามที่พี่ต้องการ) ---
+    function getPlaceNameByCoordinates(lat, lon, dist) {
+        // พิกัดอ้างอิงสถานที่ใกล้เคียง (เทียบรัศมีใกล้จุดไหนที่สุดในรัศมี 500 เมตร)
+        // 1. วัดศรีสุดารามวรวิหาร (พิกัดตัวอย่างโซนวัด)
+        const watLat = 13.766800;
+        const watLon = 100.471200;
+        const distToWat = haversineDistance(lat, lon, watLat, watLon);
+
+        // 2. มูลนิธิพระอภิธรรมวัดศรีสุดาราม
+        const foundationLat = 13.765900;
+        const foundationLon = 100.470000;
+        const distToFoundation = haversineDistance(lat, lon, foundationLat, foundationLon);
+
+        if (dist <= 45) {
+            return "สำนักการแพทย์ อาคารชั่วคราว";
+        } else if (distToWat < 120) {
+            return "วัดศรีสุดารามวรวิหาร";
+        } else if (distToFoundation < 120) {
+            return "มูลนิธิพระอภิธรรมวัดศรีสุดาราม";
+        } else if (dist <= RADIUS_LIMIT) {
+            return "สำนักการแพทย์ อาคารชั่วคราว (บริเวณโดยรอบ)";
+        } else {
+            return "พื้นที่นอกเหนือรัศมีสำนักงาน";
+        }
+    }
+
     function updateGpsDisplay() {
         if (isSubmitting) return; 
         if (lastLat === null || lastLon === null) return;
 
         if (locationTypeHidden.value === "สำนักงาน") {
             const dist = haversineDistance(lastLat, lastLon, TARGET_LAT, TARGET_LON);
-            const roundedDist = Math.round(dist);
+            const currentPlaceName = getPlaceNameByCoordinates(lastLat, lastLon, dist);
 
             if (dist <= RADIUS_LIMIT) {
                 alertBox.className = "alert-box alert-success";
-                alertBox.innerHTML = `📍 พิกัดของคุณห่างจากสำนักงาน: <b>${roundedDist} เมตร</b><br><span style="color:#1b5e20; font-size:13px;">(อยู่ในรัศมีล็อกพิกัด สามารถลงเวลาได้ปกติ)</span>`;
+                alertBox.innerHTML = `📍 สถานที่ปัจจุบันของคุณ: <br><b style="font-size: 16px; color: #1b5e20;">${currentPlaceName}</b><br><span style="color:#2e7d32; font-size:12.5px;">(อยู่ในรัศมี 500 เมตร สามารถลงเวลาได้ปกติ)</span>`;
             } else {
                 alertBox.className = "alert-box alert-danger";
-                alertBox.innerHTML = `⚠️ คุณอยู่ห่างจากสำนักงานเกินไป: <b style="text-decoration:underline;">${roundedDist} เมตร</b><br><span style="font-size:13px;">(โปรดขยับเข้าใกล้บริเวณสำนักงาน)</span>`;
+                alertBox.innerHTML = `⚠️ คุณอยู่ห่างจากสำนักงานเกิน 500 เมตร<br>สถานที่ปัจจุบัน: <b style="text-decoration:underline;">${currentPlaceName}</b><br><span style="font-size:12.5px;">(โปรดขยับเข้าใกล้บริเวณสำนักงาน)</span>`;
             }
         } else {
             alertBox.className = "alert-box alert-success";
@@ -529,7 +743,7 @@
                         alertBox.innerHTML = `📡 พิกัดล้มเหลว: <b>โปรดอนุญาตสิทธิ์เข้าถึงพิกัด GPS บนเบราว์เซอร์</b>`;
                     }
                 },
-                { enableHighAccuracy: false, timeout: 2000, maximumAge: 30000 }
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
             );
         } else {
             alertBox.className = "alert-box alert-danger";
@@ -595,6 +809,25 @@
 
     document.getElementById('mainForm').addEventListener('submit', (e) => {
         e.preventDefault();
+
+        const currentNameCheck = document.getElementById('fullname').value.trim();
+        const todayStrCheck = new Date().toLocaleDateString('th-TH');
+
+        if (actionTypeHidden.value === "เข้างาน" && currentNameCheck && localStorage.getItem(`normal_checkin_${todayStrCheck}_${currentNameCheck}`) === "true") {
+            alert("❌ คุณได้ลงเวลา 'เข้างาน' ของวันนี้ไปแล้ว ไม่สามารถลงซ้ำได้ครับ กรุณาเลือก 'เลิกงาน' แทน");
+            clearActionActive();
+            document.getElementById('actOutBtn').classList.add('active');
+            actionTypeHidden.value = "เลิกงาน";
+            return;
+        }
+
+        if (actionTypeHidden.value === "เข้า OT" && currentNameCheck && localStorage.getItem(`ot_checkin_${todayStrCheck}_${currentNameCheck}`) === "true") {
+            alert("❌ คุณได้ลงเวลา 'เข้า OT' ของวันนี้ไปแล้ว ไม่สามารถลงซ้ำได้ครับ กรุณาเลือก 'ออก OT' แทน");
+            clearActionActive();
+            document.getElementById('actOtOutBtn').classList.add('active');
+            actionTypeHidden.value = "ออก OT";
+            return;
+        }
         
         if (!photoData) {
             alert("กรุณาถ่ายภาพเซลฟี่ก่อนบันทึกเวลาครับ");
@@ -664,7 +897,7 @@
                         }
                     }
                 },
-                { enableHighAccuracy: false, timeout: 2000 } 
+                { enableHighAccuracy: true, timeout: 5000 } 
             );
         } else {
             proceedToSubmit();
@@ -740,8 +973,8 @@
         localStorage.setItem('saved_subDepartment', inputSubDept);
         localStorage.setItem('saved_empType', empType);
 
-        // คีย์ตรวจสอบว่า "วันนี้คนชื่อนี้ได้กดลงเข้างานปกติไว้หรือไม่"
         const normalCheckInKey = `normal_checkin_${currentDateStr}_${inputFullname.trim()}`;
+        const otCheckInKey = `ot_checkin_${currentDateStr}_${inputFullname.trim()}`;
         const hasCheckedInToday = localStorage.getItem(normalCheckInKey) === "true";
 
         let selectedPosition = inputPosition;
@@ -751,7 +984,6 @@
 
         const formattedEmpType = empType === "บุคคลภายนอกที่ช่วยปฏิบัติราชการ" ? `บุคคลภายนอกฯ (${workTimeScope})` : empType;
         const missionLog = missionDetail.value ? ` | ภารกิจ: ${missionDetail.value}` : '';
-        const webAppUrl = "https://script.google.com/macros/s/AKfycbwBD_7nKRzpCK1v4yAva7kUG3m4Z5a8kVKQeFCtJ9hIJBNGuSkohWGaVD9UYstSgYkT/exec";
 
         let workStatus = "ปกติ";
         if (actionType === "เข้างาน" || actionType === "เลิกงาน") {
@@ -774,7 +1006,6 @@
         let autoOutTimeDisplay = currentTimeStr;
         let didAutoCheckOut = false;
 
-        // ทำการลงเวลาออกปกติให้อัตโนมัติ เฉพาะเมื่อกด "เข้า OT" และ "วันนี้คนๆ นี้มีการลงเข้างานปกติไว้แล้วเท่านั้น"
         if (actionType === "เข้า OT" && hasCheckedInToday) {
             didAutoCheckOut = true;
             let requiredHour = 16;
@@ -830,9 +1061,16 @@
 
         submitPromise
         .then(response => {
-            // หากเป็นการลง "เข้างาน" ปกติสำเร็จ ให้บันทึกประวัติไว้ว่าวันนี้คนนี้ลงเข้างานปกติแล้ว
             if (actionType === "เข้างาน") {
                 localStorage.setItem(normalCheckInKey, "true");
+                clearActionActive();
+                document.getElementById('actOutBtn').classList.add('active');
+                actionTypeHidden.value = "เลิกงาน";
+            } else if (actionType === "เข้า OT") {
+                localStorage.setItem(otCheckInKey, "true");
+                clearActionActive();
+                document.getElementById('actOtOutBtn').classList.add('active');
+                actionTypeHidden.value = "ออก OT";
             }
 
             alertBox.classList.remove('alert-success', 'alert-danger');
@@ -868,7 +1106,106 @@
                 updateGpsDisplay();
             }, 3000);
         });
-    }
+    });
+
+    // --- ฟังก์ชันค้นหาประวัติการลงเวลา ---
+    document.getElementById('searchHistoryBtn').addEventListener('click', function() {
+        const fullname = document.getElementById('fullname').value.trim();
+        if (!fullname) {
+            alert("กรุณากรอก 'ชื่อ-นามสกุล' ด้านบนก่อนทำการค้นหาประวัติครับ");
+            document.getElementById('fullname').focus();
+            return;
+        }
+
+        const selectedMonth = document.getElementById('searchMonth').value;
+        const selectedYear = document.getElementById('searchYear').value;
+        const monthNames = {
+            "01": "มกราคม", "02": "กุมภาพันธ์", "03": "มีนาคม", "04": "เมษายน",
+            "05": "พฤษภาคม", "06": "มิถุนายน", "07": "กรกฎาคม", "08": "สิงหาคม",
+            "09": "กันยายน", "10": "ตุลาคม", "11": "พฤศจิกายน", "12": "ธันวาคม"
+        };
+        const thaiYear = parseInt(selectedYear) + 543;
+
+        const btn = this;
+        btn.innerText = "กำลังค้นหาข้อมูล...";
+        btn.disabled = true;
+
+        fetch(`${webAppUrl}?action=getHistory&fullname=${encodeURIComponent(fullname)}&month=${selectedMonth}&year=${selectedYear}`)
+        .then(res => res.json())
+        .then(data => {
+            btn.innerText = "🔎 ค้นหาข้อมูล";
+            btn.disabled = false;
+
+            const container = document.getElementById('historyResultContainer');
+            const titleEl = document.getElementById('historyTableTitle');
+            const tbody = document.getElementById('historyTableBody');
+            
+            container.style.display = 'block';
+            titleEl.innerText = `การลงเวลา เดือน ${monthNames[selectedMonth]} ${thaiYear}`;
+            tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; color: #666;">ไม่พบประวัติการลงเวลาในเดือนนี้</td></tr>`;
+                return;
+            }
+
+            let dailyMap = {};
+            data.forEach(row => {
+                let parts = row.timestamp.split(' ');
+                let datePart = parts[0]; 
+                let timePart = parts[1] ? parts[1].substring(0, 5) : ''; 
+                
+                let dateSplits = datePart.split('/');
+                if (dateSplits.length === 3) {
+                    let dYear = dateSplits[2];
+                    let dMonth = dateSplits[1].padStart(2, '0');
+                    let dDay = dateSplits[0].padStart(2, '0');
+
+                    if (dMonth === selectedMonth && dYear === selectedYear) {
+                        if (!dailyMap[dDay]) {
+                            dailyMap[dDay] = { workType: row.actionType, inTime: '-', outTime: '-', note: '-' };
+                        }
+                        
+                        let act = row.actionType;
+                        if (act.includes('เข้างาน') || act.includes('เข้า OT')) {
+                            dailyMap[dDay].inTime = timePart;
+                            if (act.includes('OT')) dailyMap[dDay].workType = 'ปฏิบัติงานนอกเวลา (OT)';
+                        } else if (act.includes('เลิกงาน') || act.includes('ออก OT')) {
+                            dailyMap[dDay].outTime = timePart;
+                        }
+
+                        if (row.workStatus === 'สาย') dailyMap[dDay].note = 'สาย';
+                        else if (row.workStatus === 'ขาดราชการ') dailyMap[dDay].note = 'ขาด';
+                        else if (row.workStatus === 'ปกติ' && dailyMap[dDay].note === '-') dailyMap[dDay].note = '-';
+                    }
+                }
+            });
+
+            let sortedDays = Object.keys(dailyMap).sort();
+            if (sortedDays.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; color: #666;">ไม่พบประวัติการลงเวลาในเดือนนี้</td></tr>`;
+                return;
+            }
+
+            sortedDays.forEach(day => {
+                let item = dailyMap[day];
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${day}</b></td>
+                    <td style="text-align: left; font-size: 11.5px;">${item.workType}</td>
+                    <td style="color: var(--primary); font-weight: 600;">${item.inTime}</td>
+                    <td style="color: var(--ot-primary); font-weight: 600;">${item.outTime}</td>
+                    <td>${item.note}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(err => {
+            btn.innerText = "🔎 ค้นหาข้อมูล";
+            btn.disabled = false;
+            alert("ไม่สามารถดึงข้อมูลประวัติได้ กรุณาลองใหม่อีกครั้ง");
+        });
+    });
 </script>
 </body>
 </html>
