@@ -204,7 +204,6 @@
         .alert-success { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); }
         .alert-danger { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger-border); }
 
-        /* --- ส่วนตารางประวัติการลงเวลาเพิ่มเติม --- */
         .history-card {
             max-width: 480px;
             width: 100%;
@@ -404,10 +403,9 @@
         <button type="submit" id="submitBtn" class="btn-submit">📌 บันทึกเวลาปฏิบัติงาน</button>
     </form>
 
-    <div id="alertBox" class="alert-box alert-success">📡 ระบบกำลังค้นหาสัญญาณดาวเทียม GPS...</div>
+    <div id="alertBox" class="alert-box alert-success">📡 ระบบกำลังตรวจสอบพิกัด GPS...</div>
 </div>
 
-<!-- --- ส่วนค้นหาและแสดงประวัติการลงเวลา --- -->
 <div class="history-card">
     <div class="history-title">🔍 ค้นหาข้อมูลประวัติการลงเวลา</div>
     
@@ -496,8 +494,11 @@
 
     window.addEventListener('load', () => {
         resetActionTypeToDefault();
-        startTrackingLocation(); 
-        startCamera();
+        
+        // แยกการทำงานหน่วงเวลาเล็กน้อย เพื่อให้ปุ่มและ UI โหลดเสร็จก่อนเรียกฮาร์ดแวร์
+        setTimeout(startTrackingLocation, 200);
+        setTimeout(startCamera, 400);
+
         setInterval(checkPhotoAge, 1000);
 
         if(localStorage.getItem('saved_fullname')) {
@@ -721,9 +722,10 @@
         }
     }
 
+    // 📌 ใช้ getCurrentPosition แทน watchPosition เพื่อไม่ให้สคริปต์ GPS บล็อกอินเทอร์เฟซปุ่มกด
     function startTrackingLocation() {
         if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(
+            navigator.geolocation.getCurrentPosition(
                 function(pos) { 
                     lastLat = pos.coords.latitude;
                     lastLon = pos.coords.longitude;
@@ -731,12 +733,10 @@
                     updateGpsDisplay();
                 },
                 function(err) { 
-                    if (!isSubmitting) {
-                        alertBox.className = "alert-box alert-danger";
-                        alertBox.innerHTML = `📡 พิกัดล้มเหลว: <b>โปรดอนุญาตสิทธิ์เข้าถึงพิกัด GPS บนเบราว์เซอร์</b>`;
-                    }
+                    alertBox.className = "alert-box alert-danger";
+                    alertBox.innerHTML = `📡 พิกัดล้มเหลว: <b>โปรดอนุญาตสิทธิ์เข้าถึงพิกัด GPS บนเบราว์เซอร์</b>`;
                 },
-                { enableHighAccuracy: false, timeout: 5000, maximumAge: 30000 }
+                { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
             );
         } else {
             alertBox.className = "alert-box alert-danger";
@@ -744,7 +744,7 @@
         }
     }
 
-    // 📌 ใช้ฟังก์ชันเปิดกล้องแบบดั้งเดิมที่เสถียรที่สุด (จากโค้ดเดิม index_2.txt)
+    // 📌 โครงสร้างเปิดกล้องแบบดั้งเดิมที่เสถียรที่สุด 
     function startCamera() {
         if (localStream) {
             localStream.getTracks().forEach(track => track.stop());
@@ -891,7 +891,7 @@
                         }
                     }
                 },
-                { enableHighAccuracy: false, timeout: 2000 } 
+                { enableHighAccuracy: true, timeout: 5000 } 
             );
         } else {
             proceedToSubmit();
@@ -1102,7 +1102,6 @@
         });
     });
 
-    // --- ฟังก์ชันค้นหาประวัติการลงเวลา ---
     document.getElementById('searchHistoryBtn').addEventListener('click', function() {
         const fullname = document.getElementById('fullname').value.trim();
         if (!fullname) {
